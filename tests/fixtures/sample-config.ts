@@ -1,0 +1,48 @@
+export const sampleConfigYaml = `
+models:
+  workhorses:
+    - id: glm-edge
+      provider: zhipu
+      cost_per_million_input: 0.30
+      cost_per_million_output: 0.60
+      max_tokens: 128000
+      capabilities: [general, chinese]
+      api_key_env: GLM_API_KEY
+    - id: kat-coder-pro
+      provider: kuaishou
+      cost_per_million_input: 0.50
+      cost_per_million_output: 1.00
+      max_tokens: 32000
+      capabilities: [code, reasoning]
+      api_key_env: KAT_CODER_API_KEY
+  judges:
+    - id: claude-opus
+      provider: anthropic
+      cost_per_million_input: 15.00
+      cost_per_million_output: 75.00
+      max_tokens: 200000
+      capabilities: [evaluation, complex-reasoning]
+      api_key_env: ANTHROPIC_API_KEY
+strategies:
+  default:
+    type: cost-optimized
+    workhorse_pool: [glm-edge, kat-coder-pro]
+    budget_per_request: 0.05
+  complex:
+    type: judgment-based
+    workhorse_pool: [kat-coder-pro]
+    judge_pool: [claude-opus]
+    escalation_threshold: 0.7
+fallback_chains:
+  - name: default-chain
+    models: [glm-edge, kat-coder-pro]
+    circuit_breaker:
+      failure_threshold: 1
+      reset_timeout_ms: 1000
+      half_open_max_calls: 1
+budgets:
+  default:
+    daily_limit: 5
+    alert_thresholds: [0.5, 0.75, 0.9]
+    hard_limit: true
+`;
