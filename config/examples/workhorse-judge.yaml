@@ -1,0 +1,57 @@
+models:
+  workhorses:
+    - id: kat-coder-pro
+      provider: kuaishou
+      cost_per_million_input: 0.50
+      cost_per_million_output: 1.00
+      max_tokens: 32000
+      capabilities: [code, reasoning]
+      api_key_env: KAT_CODER_API_KEY
+    - id: kimi-chat
+      provider: moonshot
+      cost_per_million_input: 0.80
+      cost_per_million_output: 1.60
+      max_tokens: 200000
+      capabilities: [long-context, analysis]
+      api_key_env: KIMI_API_KEY
+    - id: glm-edge
+      provider: zhipu
+      cost_per_million_input: 0.30
+      cost_per_million_output: 0.60
+      max_tokens: 128000
+      capabilities: [general, chinese]
+      api_key_env: GLM_API_KEY
+  judges:
+    - id: claude-opus
+      provider: anthropic
+      cost_per_million_input: 15.00
+      cost_per_million_output: 75.00
+      max_tokens: 200000
+      capabilities: [evaluation, complex-reasoning]
+      api_key_env: ANTHROPIC_API_KEY
+    - id: gpt-4-turbo
+      provider: openai
+      cost_per_million_input: 10.00
+      cost_per_million_output: 30.00
+      max_tokens: 128000
+      capabilities: [evaluation, code]
+      api_key_env: OPENAI_API_KEY
+strategies:
+  complex-tasks:
+    type: judgment-based
+    workhorse_pool: [kat-coder-pro, kimi-chat, glm-edge]
+    judge_pool: [claude-opus, gpt-4-turbo]
+    escalation_threshold: 0.7
+    max_judge_invocations: 2
+fallback_chains:
+  - name: judgment-chain
+    models: [kat-coder-pro, gpt-4-turbo]
+    circuit_breaker:
+      failure_threshold: 3
+      reset_timeout_ms: 120000
+      half_open_max_calls: 2
+budgets:
+  default:
+    daily_limit: 100.00
+    alert_thresholds: [0.5, 0.75, 0.9]
+    hard_limit: true
