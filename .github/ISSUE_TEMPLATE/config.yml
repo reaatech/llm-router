@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Usage and implementation questions
+    url: https://modelcontextprotocol.io/
+    about: Review the MCP specification and project docs before opening a support issue.
