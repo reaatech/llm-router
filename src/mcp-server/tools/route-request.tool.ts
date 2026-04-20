@@ -23,8 +23,7 @@ export const routeRequestTool: Tool = {
       prompt: { type: 'string', description: 'The prompt to route' },
       strategy: {
         type: 'string',
-        description:
-          'Configured strategy name or built-in strategy identifier to use for routing',
+        description: 'Configured strategy name or built-in strategy identifier to use for routing',
       },
       max_tokens: { type: 'number' },
       budget_id: { type: 'string' },

@@ -345,10 +345,14 @@ export class LLMRouter {
     }
 
     let executedResult: ExecutionResult | undefined;
-    const fallbackResult = await chain.executeFrom(selectedModel.id, async (model) => {
-      executedResult = await this.executeModel(model, request);
-      return executedResult;
-    }, this.registry.getAll());
+    const fallbackResult = await chain.executeFrom(
+      selectedModel.id,
+      async (model) => {
+        executedResult = await this.executeModel(model, request);
+        return executedResult;
+      },
+      this.registry.getAll(),
+    );
 
     return {
       model: fallbackResult.selectedModel,

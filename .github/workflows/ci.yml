@@ -108,4 +108,4 @@ jobs:
 
       - name: Test Docker image
         run: |
-          docker run --rm llm-router:${{ github.sha }} node dist/src/health-check.js
+          docker run --rm --entrypoint node llm-router:${{ github.sha }} dist/src/health-check.js

@@ -130,7 +130,7 @@ describe('LLMRouter', () => {
         prompt: 'hello',
         strategy: 'default',
       }),
-    ).rejects.toThrow("is backed by a stub provider client");
+    ).rejects.toThrow('is backed by a stub provider client');
 
     delete process.env.GLM_API_KEY;
     factory.reset();
