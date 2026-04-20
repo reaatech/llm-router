@@ -136,8 +136,7 @@ export const RouterConfigSchema = z.object({
       serviceName: z.string().optional(),
       logLevel: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
     })
-    .optional()
-    .default({ enabled: true }),
+    .default(() => ({ enabled: true, logLevel: 'info' as const })),
 });
 
 /** Schema for quality score validation */
