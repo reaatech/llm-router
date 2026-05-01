@@ -2,7 +2,7 @@
  * A/B Testing - Traffic splitting and statistical significance testing
  */
 
-import type { ModelDefinition } from "@reaatech/llm-router-core";
+import type { ModelDefinition } from '@reaatech/llm-router-core';
 import type { QualityScore } from './quality-scorer.js';
 
 /** A/B test configuration */

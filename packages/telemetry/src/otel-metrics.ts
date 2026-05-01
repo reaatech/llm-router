@@ -2,7 +2,7 @@
  * Telemetry-oriented metrics facade.
  */
 
-import { MetricsCollector } from './metrics-collector.js';
+import type { MetricsCollector } from './metrics-collector.js';
 
 export class TelemetryMetrics {
   constructor(private readonly collector: MetricsCollector) {}

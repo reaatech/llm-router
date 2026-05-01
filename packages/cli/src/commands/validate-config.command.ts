@@ -2,7 +2,7 @@
  * Validate configuration command.
  */
 
-import { loadRouterConfig } from "@reaatech/llm-router-engine";
+import { loadRouterConfig } from '@reaatech/llm-router-engine';
 import { writeError, writeLine } from '../output.js';
 
 interface ValidateConfigOptions {

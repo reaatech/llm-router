@@ -1,5 +1,5 @@
+import { BudgetManager } from '@reaatech/llm-router-telemetry';
 import { describe, expect, it } from 'vitest';
-import { BudgetManager } from "@reaatech/llm-router-telemetry";
 
 describe('BudgetManager extras', () => {
   it('fires threshold alerts and reports stats', () => {

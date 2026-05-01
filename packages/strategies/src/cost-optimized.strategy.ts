@@ -2,7 +2,7 @@
  * Cost-Optimized Strategy - Selects the cheapest model that meets requirements
  */
 
-import type { ModelDefinition, RoutingRequest, RoutingContext } from "@reaatech/llm-router-core";
+import type { ModelDefinition, RoutingContext, RoutingRequest } from '@reaatech/llm-router-core';
 import { BaseRoutingStrategy } from './strategy.interface.js';
 import type { StrategySelectionResult } from './strategy.interface.js';
 
@@ -56,7 +56,7 @@ export class CostOptimizedStrategy extends BaseRoutingStrategy {
 
     // Filter by workhorse pool if configured
     if (this.config.workhorsePool && this.config.workhorsePool.length > 0) {
-      candidates = candidates.filter((m) => this.config.workhorsePool!.includes(m.id));
+      candidates = candidates.filter((m) => this.config.workhorsePool?.includes(m.id));
     }
 
     // Filter by required capabilities

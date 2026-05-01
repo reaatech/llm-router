@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
-  RetryLogic,
+  IdempotencyStore,
   RetryExhaustedError,
+  RetryLogic,
   generateIdempotencyKey,
   isRetryableStatusCode,
-  IdempotencyStore,
-} from "./retry-logic.js";
+} from './retry-logic.js';
 
 describe('RetryLogic', () => {
   it('retries until success', async () => {
@@ -57,7 +57,7 @@ describe('IdempotencyStore', () => {
     await store.set('key-1', { value: 42 });
     const result = await store.get<{ value: number }>('key-1');
     expect(result).not.toBeNull();
-    expect(result!.result.value).toBe(42);
+    expect(result?.result.value).toBe(42);
   });
 
   it('returns null for missing keys', async () => {
@@ -148,6 +148,6 @@ describe('RetryLogic with IdempotencyStore', () => {
     expect(callCount).toBe(1);
     const cached = await store.get('new-key');
     expect(cached).not.toBeNull();
-    expect(cached!.result).toBe('result');
+    expect(cached?.result).toBe('result');
   });
 });

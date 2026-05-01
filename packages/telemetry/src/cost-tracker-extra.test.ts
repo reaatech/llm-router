@@ -1,6 +1,6 @@
+import type { ModelDefinition } from '@reaatech/llm-router-core';
+import { CostTracker, createCostTracker } from '@reaatech/llm-router-telemetry';
 import { describe, expect, it } from 'vitest';
-import { CostTracker, createCostTracker } from "@reaatech/llm-router-telemetry";
-import type { ModelDefinition } from "@reaatech/llm-router-core";
 
 const model: ModelDefinition = {
   id: 'glm-edge',

@@ -3,10 +3,10 @@
  */
 
 import type {
-  ModelDefinition,
-  FallbackChainDefinition,
   CircuitBreakerState,
-} from "@reaatech/llm-router-core";
+  FallbackChainDefinition,
+  ModelDefinition,
+} from '@reaatech/llm-router-core';
 import { CircuitBreaker } from './circuit-breaker.js';
 
 /** Result of fallback chain execution */

@@ -3,11 +3,11 @@
  */
 
 import type {
-  ModelDefinition,
-  RoutingRequest,
-  RoutingContext,
   ModelCapability,
-} from "@reaatech/llm-router-core";
+  ModelDefinition,
+  RoutingContext,
+  RoutingRequest,
+} from '@reaatech/llm-router-core';
 import { BaseRoutingStrategy } from './strategy.interface.js';
 import type { StrategySelectionResult } from './strategy.interface.js';
 
@@ -125,15 +125,12 @@ export class CapabilityBasedStrategy extends BaseRoutingStrategy {
     // Check if model is in preferred list for any required capability
     for (const cap of requiredCaps) {
       const preferred = this.config.preferredModels[cap];
-      if (preferred && preferred.includes(model.id)) {
+      if (preferred?.includes(model.id)) {
         score += 15; // Bonus for being preferred
       }
     }
 
-    if (
-      this.config.preferredModelIds !== undefined &&
-      this.config.preferredModelIds.includes(model.id)
-    ) {
+    if (this.config.preferredModelIds?.includes(model.id)) {
       score += 10;
     }
 

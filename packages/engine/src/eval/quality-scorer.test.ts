@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
-  QualityScorer,
-  createRuleBasedScorer,
   HumanFeedbackStore,
+  QualityScorer,
   createQualityScorerWithFeedback,
-} from "./quality-scorer.js";
+  createRuleBasedScorer,
+} from './quality-scorer.js';
 
 describe('QualityScorer', () => {
   it('scores using the registered default scorer', async () => {

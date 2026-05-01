@@ -1,10 +1,10 @@
+import type { ModelDefinition } from '@reaatech/llm-router-core';
 import { describe, expect, it } from 'vitest';
 import {
-  FallbackChain,
+  type FallbackChain,
   FallbackChainExhaustedError,
   createFallbackChain,
-} from "./fallback-chain.js";
-import type { ModelDefinition } from "@reaatech/llm-router-core";
+} from './fallback-chain.js';
 
 const models: ModelDefinition[] = [
   {

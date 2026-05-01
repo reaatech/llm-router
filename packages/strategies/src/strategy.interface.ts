@@ -2,7 +2,7 @@
  * Strategy Interface - Base interface for all routing strategies
  */
 
-import type { ModelDefinition, RoutingRequest, RoutingContext } from "@reaatech/llm-router-core";
+import type { ModelDefinition, RoutingContext, RoutingRequest } from '@reaatech/llm-router-core';
 
 /** Result of strategy model selection */
 export interface StrategySelectionResult {
@@ -81,7 +81,7 @@ export abstract class BaseRoutingStrategy implements RoutingStrategy {
   abstract readonly name: string;
   readonly priority: number;
 
-  constructor(priority: number = 10) {
+  constructor(priority = 10) {
     this.priority = priority;
   }
 

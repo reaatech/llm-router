@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { parseRouterConfig } from "./config-loader.js";
 import { sampleConfigYaml } from '../fixtures/sample-config.js';
+import { parseRouterConfig } from './config-loader.js';
 
 describe('config-loader', () => {
   it('parses snake_case config into router config', () => {

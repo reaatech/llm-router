@@ -2,8 +2,8 @@
  * Cost reporting utilities.
  */
 
-import { CostTracker } from './cost-tracker.js';
-import { BudgetManager } from './budget-manager.js';
+import type { BudgetManager } from './budget-manager.js';
+import type { CostTracker } from './cost-tracker.js';
 
 export interface CostReport {
   totalCost: number;

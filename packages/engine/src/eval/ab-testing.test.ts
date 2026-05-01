@@ -1,6 +1,6 @@
+import type { ModelDefinition } from '@reaatech/llm-router-core';
 import { describe, expect, it, vi } from 'vitest';
-import { ABTestManager } from "./ab-testing.js";
-import type { ModelDefinition } from "@reaatech/llm-router-core";
+import { ABTestManager } from './ab-testing.js';
 
 const models: ModelDefinition[] = [
   {

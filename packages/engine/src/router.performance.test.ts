@@ -1,9 +1,9 @@
-import { describe, expect, it } from 'vitest';
 import { performance } from 'node:perf_hooks';
-import { createRouter } from "./router.js";
-import { ModelRegistry } from "./registry/model-registry.js";
-import { StrategyOrchestrator } from "@reaatech/llm-router-strategies";
-import { CostOptimizedStrategy } from "@reaatech/llm-router-strategies";
+import { StrategyOrchestrator } from '@reaatech/llm-router-strategies';
+import { CostOptimizedStrategy } from '@reaatech/llm-router-strategies';
+import { describe, expect, it } from 'vitest';
+import { ModelRegistry } from './registry/model-registry.js';
+import { createRouter } from './router.js';
 
 describe('router performance smoke', () => {
   it('makes a routing decision quickly in-memory', async () => {

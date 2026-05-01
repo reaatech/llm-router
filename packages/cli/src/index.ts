@@ -10,9 +10,9 @@
  */
 
 import { Command } from 'commander';
-import { routeCommand } from './commands/route.command.js';
 import { benchmarkCommand } from './commands/benchmark.command.js';
 import { costReportCommand } from './commands/cost-report.command.js';
+import { routeCommand } from './commands/route.command.js';
 import { validateConfigCommand } from './commands/validate-config.command.js';
 
 const program = new Command();

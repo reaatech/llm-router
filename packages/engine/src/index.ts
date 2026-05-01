@@ -67,7 +67,11 @@ export {
   type StrategyEvalAttributes,
 } from './observability/tracing.js';
 
-export { MetricsCollector, metricsCollector, type MetricsConfig } from '@reaatech/llm-router-telemetry';
+export {
+  MetricsCollector,
+  metricsCollector,
+  type MetricsConfig,
+} from '@reaatech/llm-router-telemetry';
 export {
   ObservabilityDashboard,
   type DashboardSnapshot,

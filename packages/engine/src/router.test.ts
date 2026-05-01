@@ -1,10 +1,10 @@
+import { ProviderClientFactory } from '@reaatech/llm-router-engine';
+import { StrategyOrchestrator } from '@reaatech/llm-router-strategies';
 import { describe, expect, it } from 'vitest';
-import { LLMRouter } from "./router.js";
-import { parseRouterConfig } from "./utils/config-loader.js";
 import { sampleConfigYaml } from './fixtures/sample-config.js';
-import { ModelRegistry } from "./registry/model-registry.js";
-import { StrategyOrchestrator } from "@reaatech/llm-router-strategies";
-import { ProviderClientFactory } from "@reaatech/llm-router-engine";
+import { ModelRegistry } from './registry/model-registry.js';
+import { LLMRouter } from './router.js';
+import { parseRouterConfig } from './utils/config-loader.js';
 
 describe('LLMRouter', () => {
   it('routes a request with loaded config', async () => {
@@ -132,7 +132,7 @@ describe('LLMRouter', () => {
       }),
     ).rejects.toThrow('is backed by a stub provider client');
 
-    delete process.env.GLM_API_KEY;
+    process.env.GLM_API_KEY = undefined;
     factory.reset();
   });
 });

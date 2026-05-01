@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CircuitBreaker } from "./circuit-breaker.js";
+import { CircuitBreaker } from './circuit-breaker.js';
 
 describe('CircuitBreaker', () => {
   it('opens after the failure threshold and can be reset', () => {

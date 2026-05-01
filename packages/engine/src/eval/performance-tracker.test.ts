@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PerformanceTracker } from "./performance-tracker.js";
+import { PerformanceTracker } from './performance-tracker.js';
 
 describe('PerformanceTracker', () => {
   it('calculates latency and success metrics', () => {

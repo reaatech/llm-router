@@ -2,7 +2,7 @@
  * OpenTelemetry Tracing - Distributed tracing for routing decisions
  */
 
-import { trace, context, SpanStatusCode, type Tracer, type Span } from '@opentelemetry/api';
+import { type Span, SpanStatusCode, type Tracer, context, trace } from '@opentelemetry/api';
 
 /** Tracing configuration */
 export interface TracingConfig {

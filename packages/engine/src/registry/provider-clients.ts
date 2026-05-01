@@ -7,7 +7,7 @@
  */
 
 import { createHash } from 'node:crypto';
-import type { ModelDefinition } from "@reaatech/llm-router-core";
+import type { ModelDefinition } from '@reaatech/llm-router-core';
 import { logger } from '../observability/logger.js';
 
 /** Supported LLM providers */

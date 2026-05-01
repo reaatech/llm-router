@@ -2,7 +2,7 @@
  * Judgment-Based Strategy - Uses workhorses for routine tasks, escalates to judges for complex ones
  */
 
-import type { ModelDefinition, RoutingRequest, RoutingContext } from "@reaatech/llm-router-core";
+import type { ModelDefinition, RoutingContext, RoutingRequest } from '@reaatech/llm-router-core';
 import { BaseRoutingStrategy } from './strategy.interface.js';
 import type { StrategySelectionResult } from './strategy.interface.js';
 
@@ -232,13 +232,11 @@ export class JudgmentBasedStrategy extends BaseRoutingStrategy {
 
       // If costs are similar, prefer model with more relevant capabilities
       if (Math.abs(costA - costB) < 5) {
-        const capsA = a.capabilities.filter(
-          (c) =>
-            request.requiredCapabilities !== undefined && request.requiredCapabilities.includes(c),
+        const capsA = a.capabilities.filter((c) =>
+          request.requiredCapabilities?.includes(c),
         ).length;
-        const capsB = b.capabilities.filter(
-          (c) =>
-            request.requiredCapabilities !== undefined && request.requiredCapabilities.includes(c),
+        const capsB = b.capabilities.filter((c) =>
+          request.requiredCapabilities?.includes(c),
         ).length;
         return capsB - capsA;
       }

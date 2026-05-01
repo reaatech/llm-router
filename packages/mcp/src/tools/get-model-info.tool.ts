@@ -1,5 +1,5 @@
 import type { Tool } from '@modelcontextprotocol/sdk/types.js';
-import type { RouterInterface } from "./mcp-server.js";
+import type { RouterInterface } from './mcp-server.js';
 
 export const getModelInfoTool: Tool = {
   name: 'get_model_info',

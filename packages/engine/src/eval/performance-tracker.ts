@@ -2,7 +2,7 @@
  * Performance Tracker - Latency, success rate, and model ranking
  */
 
-import type { ModelDefinition } from "@reaatech/llm-router-core";
+import type { ModelDefinition } from '@reaatech/llm-router-core';
 
 /** Performance metrics for a model */
 export interface ModelPerformance {
@@ -44,7 +44,7 @@ export class PerformanceTracker {
   private modelData: Map<string, ModelPerformanceData> = new Map();
   private maxSamplesPerModel: number;
 
-  constructor(maxSamplesPerModel: number = 1000) {
+  constructor(maxSamplesPerModel = 1000) {
     this.maxSamplesPerModel = maxSamplesPerModel;
   }
 
@@ -113,7 +113,7 @@ export class PerformanceTracker {
 
     const qualityScores = data.samples
       .filter((s) => s.qualityScore !== undefined)
-      .map((s) => s.qualityScore!) as number[];
+      .map((s) => s.qualityScore as number);
 
     if (qualityScores.length === 0) {
       return 0;
@@ -163,13 +163,13 @@ export class PerformanceTracker {
   }
 
   /** Get top performing models */
-  getTopModels(modelPool: ModelDefinition[], count: number = 3): ModelPerformance[] {
+  getTopModels(modelPool: ModelDefinition[], count = 3): ModelPerformance[] {
     const all = this.getAllPerformance(modelPool);
     return all.slice(0, count);
   }
 
   /** Get recent samples for a model */
-  getRecentSamples(modelId: string, count: number = 100): LatencySample[] {
+  getRecentSamples(modelId: string, count = 100): LatencySample[] {
     const data = this.modelData.get(modelId);
     if (!data) {
       return [];

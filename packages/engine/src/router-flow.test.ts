@@ -1,8 +1,8 @@
+import { StrategyOrchestrator } from '@reaatech/llm-router-strategies';
+import { CostOptimizedStrategy } from '@reaatech/llm-router-strategies';
 import { describe, expect, it } from 'vitest';
-import { createRouter } from "./router.js";
-import { ModelRegistry } from "./registry/model-registry.js";
-import { StrategyOrchestrator } from "@reaatech/llm-router-strategies";
-import { CostOptimizedStrategy } from "@reaatech/llm-router-strategies";
+import { ModelRegistry } from './registry/model-registry.js';
+import { createRouter } from './router.js';
 
 describe('router flow', () => {
   it('routes end-to-end with explicit collaborators', async () => {

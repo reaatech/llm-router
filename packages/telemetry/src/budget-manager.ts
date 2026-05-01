@@ -2,7 +2,7 @@
  * Budget Manager - Per-user/project budget tracking and enforcement
  */
 
-import type { BudgetConfig, BudgetState } from "@reaatech/llm-router-core";
+import type { BudgetConfig, BudgetState } from '@reaatech/llm-router-core';
 
 /** Budget alert event */
 export interface BudgetAlert {
@@ -33,8 +33,6 @@ export class BudgetManager {
   private budgets: Map<string, BudgetConfig> = new Map();
   private states: Map<string, BudgetState> = new Map();
   private alertListeners: ((alert: BudgetAlert) => void)[] = [];
-
-  constructor() {}
 
   /**
    * Register a budget configuration
@@ -114,7 +112,7 @@ export class BudgetManager {
       // No budget configured, allow by default
       return {
         allowed: true,
-        remaining: Infinity,
+        remaining: Number.POSITIVE_INFINITY,
         limitExceeded: false,
       };
     }
@@ -190,7 +188,7 @@ export class BudgetManager {
   getRemaining(budgetId: string): number {
     const state = this.states.get(budgetId);
     if (!state) {
-      return Infinity;
+      return Number.POSITIVE_INFINITY;
     }
 
     const config = this.budgets.get(budgetId);

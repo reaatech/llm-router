@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EvalHooksManager } from "./eval-hooks.js";
+import { EvalHooksManager } from './eval-hooks.js';
 
 describe('EvalHooksManager', () => {
   it('runs hooks in priority order', async () => {

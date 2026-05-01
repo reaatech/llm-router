@@ -10,7 +10,7 @@ import {
   recordStrategyEvaluation,
   setupTracing,
   startRoutingSpan,
-} from "./tracing.js";
+} from './tracing.js';
 
 class FakeSpan {
   public ended = false;

@@ -4,10 +4,14 @@
 
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { RouterConfigSchema } from '@reaatech/llm-router-core';
+import type { RouterConfigInput } from '@reaatech/llm-router-core';
+import type {
+  BudgetConfig,
+  FallbackChainDefinition,
+  ModelDefinition,
+} from '@reaatech/llm-router-core';
 import YAML from 'yaml';
-import { RouterConfigSchema } from "@reaatech/llm-router-core";
-import type { RouterConfigInput } from "@reaatech/llm-router-core";
-import type { BudgetConfig, FallbackChainDefinition, ModelDefinition } from "@reaatech/llm-router-core";
 
 export interface RouterConfig {
   models: {

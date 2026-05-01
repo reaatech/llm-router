@@ -1,5 +1,5 @@
+import { ProviderClientFactory } from '@reaatech/llm-router-engine';
 import { describe, expect, it } from 'vitest';
-import { ProviderClientFactory } from "@reaatech/llm-router-engine";
 
 describe('provider client contract', () => {
   it('creates a generic provider client with the shared completion contract', async () => {

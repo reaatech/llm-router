@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { LLMRouter } from "./router.js";
-import { parseRouterConfig } from "./utils/config-loader.js";
+import { EvalHooksManager } from './eval/eval-hooks.js';
 import { sampleConfigYaml } from './fixtures/sample-config.js';
-import { EvalHooksManager } from "./eval/eval-hooks.js";
+import { LLMRouter } from './router.js';
+import { parseRouterConfig } from './utils/config-loader.js';
 
 describe('router hooks and telemetry', () => {
   it('tracks cost telemetry accurately for routed requests', async () => {

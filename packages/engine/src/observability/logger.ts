@@ -105,7 +105,7 @@ export function redactPIIPatterns(value: string): string {
     // Ensure the regex has global flag for replaceAll
     const regex = pattern.regex.global
       ? pattern.regex
-      : new RegExp(pattern.regex.source, pattern.regex.flags + 'g');
+      : new RegExp(pattern.regex.source, `${pattern.regex.flags}g`);
     result = result.replaceAll(regex, PII_REDACTED);
   }
   return result;

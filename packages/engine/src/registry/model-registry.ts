@@ -2,8 +2,12 @@
  * Model Registry - Manages LLM model definitions, capabilities, and pricing
  */
 
-import type { ModelDefinition, ModelCapability, CircuitBreakerState } from "@reaatech/llm-router-core";
-import { ModelDefinitionSchema } from "@reaatech/llm-router-core";
+import type {
+  CircuitBreakerState,
+  ModelCapability,
+  ModelDefinition,
+} from '@reaatech/llm-router-core';
+import { ModelDefinitionSchema } from '@reaatech/llm-router-core';
 import type { ZodError } from 'zod';
 
 /** Options for filtering models */
@@ -131,7 +135,7 @@ export class ModelRegistry {
 
     // Filter by model IDs
     if (options.modelIds && options.modelIds.length > 0) {
-      models = models.filter((m) => options.modelIds!.includes(m.id));
+      models = models.filter((m) => options.modelIds?.includes(m.id));
     }
 
     // Filter by provider
@@ -142,22 +146,24 @@ export class ModelRegistry {
     // Filter by capabilities
     if (options.capabilities && options.capabilities.length > 0) {
       models = models.filter((m) =>
-        options.capabilities!.every((cap) => m.capabilities.includes(cap)),
+        options.capabilities?.every((cap) => m.capabilities.includes(cap)),
       );
     }
 
     // Filter by max tokens
     if (options.minMaxTokens !== undefined && options.minMaxTokens > 0) {
-      models = models.filter((m) => m.maxTokens >= options.minMaxTokens!);
+      const { minMaxTokens } = options;
+      models = models.filter((m) => m.maxTokens >= minMaxTokens);
     }
 
     // Filter by cost per request (estimated)
     if (options.maxCostPerRequest !== undefined && options.maxCostPerRequest > 0) {
+      const { maxCostPerRequest } = options;
       models = models.filter((m) => {
         // Estimate cost for a typical request (1000 input, 500 output tokens)
         const estimatedCost =
           (1000 / 1_000_000) * m.costPerMillionInput + (500 / 1_000_000) * m.costPerMillionOutput;
-        return estimatedCost <= options.maxCostPerRequest!;
+        return estimatedCost <= maxCostPerRequest;
       });
     }
 

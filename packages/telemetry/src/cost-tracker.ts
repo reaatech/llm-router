@@ -2,7 +2,7 @@
  * Cost Tracker - Per-request cost calculation and accumulation
  */
 
-import type { ModelDefinition } from "@reaatech/llm-router-core";
+import type { ModelDefinition } from '@reaatech/llm-router-core';
 
 /** Cost entry for tracking */
 export interface CostEntry {
@@ -47,7 +47,7 @@ export class CostTracker {
   private entries: CostEntry[] = [];
   private maxEntries: number;
 
-  constructor(maxEntries: number = 100000) {
+  constructor(maxEntries = 100000) {
     this.maxEntries = maxEntries;
   }
 
@@ -209,7 +209,7 @@ export class CostTracker {
       const window = entries.slice(i - windowSize, i);
       const costs = window.map((e) => e.cost);
       const mean = costs.reduce((sum, c) => sum + c, 0) / costs.length;
-      const variance = costs.reduce((sum, c) => sum + Math.pow(c - mean, 2), 0) / costs.length;
+      const variance = costs.reduce((sum, c) => sum + (c - mean) ** 2, 0) / costs.length;
       const stdDev = Math.sqrt(variance);
 
       const currentCost = entries[i].cost;
@@ -231,7 +231,7 @@ export class CostTracker {
   /**
    * Get recent entries
    */
-  getRecentEntries(count: number = 100): CostEntry[] {
+  getRecentEntries(count = 100): CostEntry[] {
     return this.entries.slice(-count);
   }
 
@@ -261,11 +261,13 @@ export class CostTracker {
     }
 
     if (options?.startTime) {
-      entries = entries.filter((e) => e.timestamp >= options.startTime!);
+      const { startTime } = options;
+      entries = entries.filter((e) => e.timestamp >= startTime);
     }
 
     if (options?.endTime) {
-      entries = entries.filter((e) => e.timestamp <= options.endTime!);
+      const { endTime } = options;
+      entries = entries.filter((e) => e.timestamp <= endTime);
     }
 
     return entries;
@@ -275,6 +277,6 @@ export class CostTracker {
 /**
  * Create a cost tracker instance
  */
-export function createCostTracker(maxEntries: number = 100000): CostTracker {
+export function createCostTracker(maxEntries = 100000): CostTracker {
   return new CostTracker(maxEntries);
 }

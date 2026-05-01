@@ -7,7 +7,7 @@ import type {
   QualityScore,
   RoutingRequest,
   RoutingResult,
-} from "@reaatech/llm-router-core";
+} from '@reaatech/llm-router-core';
 
 export type { QualityScore };
 

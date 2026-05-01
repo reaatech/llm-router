@@ -32,11 +32,7 @@
   "license": "MIT",
   "packageManager": "pnpm@10.22.0",
   "pnpm": {
-    "onlyBuiltDependencies": [
-      "@biomejs/biome",
-      "esbuild",
-      "protobufjs"
-    ]
+    "onlyBuiltDependencies": ["@biomejs/biome", "esbuild", "protobufjs"]
   },
   "repository": {
     "type": "git",

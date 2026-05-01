@@ -2,7 +2,7 @@
  * Latency-Optimized Strategy - Selects the fastest model based on historical data
  */
 
-import type { ModelDefinition, RoutingRequest, RoutingContext } from "@reaatech/llm-router-core";
+import type { ModelDefinition, RoutingContext, RoutingRequest } from '@reaatech/llm-router-core';
 import { BaseRoutingStrategy } from './strategy.interface.js';
 import type { StrategySelectionResult } from './strategy.interface.js';
 
@@ -55,7 +55,7 @@ export class LatencyOptimizedStrategy extends BaseRoutingStrategy {
 
     // Filter by model pool if configured
     if (this.config.modelPool && this.config.modelPool.length > 0) {
-      candidates = candidates.filter((m) => this.config.modelPool!.includes(m.id));
+      candidates = candidates.filter((m) => this.config.modelPool?.includes(m.id));
     }
 
     // Filter by required capabilities
@@ -81,9 +81,8 @@ export class LatencyOptimizedStrategy extends BaseRoutingStrategy {
 
     // Filter by target P99 if configured
     if (this.config.targetP99Ms !== undefined && this.config.targetP99Ms > 0) {
-      const filteredCandidates = scoredCandidates.filter(
-        (c) => c.predictedLatency <= this.config.targetP99Ms!,
-      );
+      const { targetP99Ms } = this.config;
+      const filteredCandidates = scoredCandidates.filter((c) => c.predictedLatency <= targetP99Ms);
       if (filteredCandidates.length > 0) {
         scoredCandidates.splice(0, scoredCandidates.length, ...filteredCandidates);
       }

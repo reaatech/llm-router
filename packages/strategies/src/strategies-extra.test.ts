@@ -1,7 +1,7 @@
+import type { ModelDefinition, RoutingContext } from '@reaatech/llm-router-core';
+import { JudgmentBasedStrategy } from '@reaatech/llm-router-strategies';
+import { LatencyOptimizedStrategy } from '@reaatech/llm-router-strategies';
 import { describe, expect, it } from 'vitest';
-import { JudgmentBasedStrategy } from "@reaatech/llm-router-strategies";
-import { LatencyOptimizedStrategy } from "@reaatech/llm-router-strategies";
-import type { ModelDefinition, RoutingContext } from "@reaatech/llm-router-core";
 
 const context: RoutingContext = {
   timestamp: new Date(),

@@ -1,18 +1,18 @@
+import { CircuitBreaker } from '@reaatech/llm-router-fallback';
+import { MetricsCollector } from '@reaatech/llm-router-telemetry';
+import { CostTracker } from '@reaatech/llm-router-telemetry';
+import { BudgetManager } from '@reaatech/llm-router-telemetry';
+import { CostReporter } from '@reaatech/llm-router-telemetry';
 import { describe, expect, it } from 'vitest';
+import { ObservabilityDashboard } from './dashboard.js';
 import {
   childLogger,
-  createLogger,
-  redactSensitiveFields,
-  redactPIIPatterns,
   containsPII,
-} from "./logger.js";
-import { MetricsCollector } from "@reaatech/llm-router-telemetry";
-import { ObservabilityDashboard } from "./dashboard.js";
-import { CostTracker } from "@reaatech/llm-router-telemetry";
-import { BudgetManager } from "@reaatech/llm-router-telemetry";
-import { CostReporter } from "@reaatech/llm-router-telemetry";
-import { setupTracing } from "./tracing.js";
-import { CircuitBreaker } from '@reaatech/llm-router-fallback';
+  createLogger,
+  redactPIIPatterns,
+  redactSensitiveFields,
+} from './logger.js';
+import { setupTracing } from './tracing.js';
 
 describe('observability helpers', () => {
   it('redacts sensitive fields and can create a logger', () => {

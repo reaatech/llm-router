@@ -3,6 +3,7 @@ node_modules/
 
 # Build output
 dist/
+.turbo/
 
 # Stray tsup artifacts in src/ (never commit these)
 packages/*/src/**/*.js

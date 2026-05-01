@@ -1,7 +1,7 @@
+import { BudgetManager } from '@reaatech/llm-router-telemetry';
+import { CostTracker } from '@reaatech/llm-router-telemetry';
+import { CostReporter } from '@reaatech/llm-router-telemetry';
 import { describe, expect, it } from 'vitest';
-import { BudgetManager } from "@reaatech/llm-router-telemetry";
-import { CostTracker } from "@reaatech/llm-router-telemetry";
-import { CostReporter } from "@reaatech/llm-router-telemetry";
 
 describe('CostReporter', () => {
   it('builds a cost report with budget details', () => {

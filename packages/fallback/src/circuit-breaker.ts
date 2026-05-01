@@ -2,7 +2,7 @@
  * Circuit Breaker - Per-model failure tracking and recovery
  */
 
-import type { CircuitBreakerState, CircuitBreakerConfig } from "@reaatech/llm-router-core";
+import type { CircuitBreakerConfig, CircuitBreakerState } from '@reaatech/llm-router-core';
 
 /** Default circuit breaker configuration */
 const DEFAULT_CONFIG: CircuitBreakerConfig = {
@@ -28,10 +28,10 @@ export type CircuitBreakerEvent =
  */
 export class CircuitBreaker {
   private state: CircuitBreakerState = 'CLOSED';
-  private failureCount: number = 0;
+  private failureCount = 0;
   private lastFailureTime: Date | null = null;
-  private halfOpenCalls: number = 0;
-  private halfOpenSuccesses: number = 0;
+  private halfOpenCalls = 0;
+  private halfOpenSuccesses = 0;
   private halfOpenStartTime: Date | null = null;
   private config: CircuitBreakerConfig;
   private eventListeners: ((event: CircuitBreakerEvent) => void)[] = [];

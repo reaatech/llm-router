@@ -1,10 +1,10 @@
+import { ProviderClientFactory } from '@reaatech/llm-router-engine';
 import { describe, expect, it } from 'vitest';
 import { benchmarkCommand } from './commands/benchmark.command.js';
+import { costReportCommand } from './commands/cost-report.command.js';
 import { routeCommand } from './commands/route.command.js';
 import { validateConfigCommand } from './commands/validate-config.command.js';
-import { costReportCommand } from './commands/cost-report.command.js';
 import { writeError } from './output.js';
-import { ProviderClientFactory } from '@reaatech/llm-router-engine';
 
 describe('CLI commands', () => {
   it('prints summaries for route, validate-config, benchmark, and cost-report', async () => {
@@ -75,7 +75,7 @@ describe('CLI commands', () => {
     } finally {
       process.stdout.write = originalWrite;
       process.stderr.write = originalErrorWrite;
-      delete process.env.GLM_API_KEY;
+      process.env.GLM_API_KEY = undefined;
       factory.reset();
       process.exitCode = 0;
     }

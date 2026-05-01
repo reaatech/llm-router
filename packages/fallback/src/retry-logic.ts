@@ -232,7 +232,7 @@ export class RetryLogic {
    */
   private calculateDelay(attempt: number): number {
     // Exponential backoff
-    let delay = this.config.initialDelayMs * Math.pow(this.config.backoffMultiplier, attempt);
+    let delay = this.config.initialDelayMs * this.config.backoffMultiplier ** attempt;
 
     // Cap at maximum delay
     delay = Math.min(delay, this.config.maxDelayMs);
@@ -337,7 +337,7 @@ export function createHttpRetryableChecker(
     // Check for status code in error message
     const match = error.message.match(/status[:\s]*(\d{3})/i);
     if (match) {
-      const statusCode = parseInt(match[1], 10);
+      const statusCode = Number.parseInt(match[1], 10);
       return isRetryableStatusCode(statusCode) || additionalRetryableCodes.includes(statusCode);
     }
 

@@ -1,10 +1,10 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import type { ModelDefinition } from '@reaatech/llm-router-core';
 import {
   ProviderClientFactory,
   getConfiguredProviders,
   isProviderConfigured,
-} from "@reaatech/llm-router-engine";
-import type { ModelDefinition } from "@reaatech/llm-router-core";
+} from '@reaatech/llm-router-engine';
+import { afterEach, describe, expect, it } from 'vitest';
 
 const model: ModelDefinition = {
   id: 'gpt-4-turbo',
@@ -18,9 +18,9 @@ const model: ModelDefinition = {
 
 describe('ProviderClientFactory extras', () => {
   afterEach(() => {
-    delete process.env.OPENAI_API_KEY;
-    delete process.env.ANTHROPIC_API_KEY;
-    delete process.env.GOOGLE_API_KEY;
+    process.env.OPENAI_API_KEY = undefined;
+    process.env.ANTHROPIC_API_KEY = undefined;
+    process.env.GOOGLE_API_KEY = undefined;
     const factory = ProviderClientFactory.getInstance();
     factory.reset();
   });

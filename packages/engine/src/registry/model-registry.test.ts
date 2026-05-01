@@ -2,9 +2,9 @@
  * Model Registry Tests
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
-import { ModelRegistry } from "./model-registry.js";
-import type { ModelDefinition } from "@reaatech/llm-router-core";
+import type { ModelDefinition } from '@reaatech/llm-router-core';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { ModelRegistry } from './model-registry.js';
 
 describe('ModelRegistry', () => {
   let registry: ModelRegistry;
