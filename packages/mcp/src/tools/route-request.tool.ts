@@ -1,5 +1,5 @@
 import type { Tool } from '@modelcontextprotocol/sdk/types.js';
-import type { RouterInterface } from './mcp-server.js';
+import type { RouterInterface } from '../mcp-server.js';
 
 const VALID_CAPABILITIES = [
   'code',
