@@ -2,13 +2,15 @@
 
 ## Capability
 
-Routes LLM requests using a two-tier approach: cheap workhorse models (KAT-Coder, Kimi, GLM) handle routine tasks, while premium judge models (Claude, GPT-4) are reserved for complex reasoning, debugging, and evaluation. Escalation is triggered by low confidence scores or explicit request.
+Routes LLM requests using a two-tier approach: cheap workhorse models (KAT-Coder, Kimi, GLM) handle routine tasks, while premium judge models (Claude, GPT-4) are reserved for complex reasoning, debugging, and evaluation. Escalation is triggered by low confidence scores or explicit request. Provided by `@reaatech/llm-router-strategies` via the `JudgmentBasedStrategy` class.
 
 ## MCP Tools
 
+The llm-router MCP server (`@reaatech/llm-router-mcp`) exposes routing through a unified `route_request` tool:
+
 | Tool | Input Schema | Output | Rate Limit |
 |------|-------------|--------|------------|
-| `route_judgment_based` | `{ prompt: string, task_type?: string, confidence_threshold?: number, max_judge_invocations?: number, require_consensus?: boolean }` | `{ primary_model: string, judge_model?: string, confidence_score: number, escalated: boolean, total_cost: number }` | 50 RPM |
+| `route_request` (strategy: judgment-based) | `{ prompt: string, strategy: string, confidenceThreshold?: number, maxTokens?: number, budgetId?: string }` | `{ model: {...}, strategy: string, cost: number, confidence: number, latencyMs: number, result: {...} }` | 50 RPM |
 
 ## Usage Examples
 
@@ -19,34 +21,35 @@ Routes LLM requests using a two-tier approach: cheap workhorse models (KAT-Coder
 **Tool Call:**
 ```json
 {
-  "name": "route_judgment_based",
+  "name": "route_request",
   "arguments": {
     "prompt": "Review this code for security vulnerabilities...",
-    "task_type": "code_review",
-    "confidence_threshold": 0.7,
-    "max_judge_invocations": 2
+    "strategy": "judgment-based",
+    "confidenceThreshold": 0.7,
+    "maxTokens": 4000
   }
 }
 ```
 
-**Expected Response (No Escalation):**
+**Expected Response (No Escalation — workhorse confident):**
 ```json
 {
-  "primary_model": "kat-coder-pro",
-  "confidence_score": 0.85,
-  "escalated": false,
-  "total_cost": 0.003
+  "model": { "id": "kat-coder-pro", "provider": "kuaishou" },
+  "strategy": "judgment-based",
+  "cost": 0.0030,
+  "confidence": 0.85,
+  "latencyMs": 1200
 }
 ```
 
-**Expected Response (With Escalation):**
+**Expected Response (With Escalation — escalated to judge):**
 ```json
 {
-  "primary_model": "kat-coder-pro",
-  "judge_model": "claude-opus",
-  "confidence_score": 0.45,
-  "escalated": true,
-  "total_cost": 0.045
+  "model": { "id": "claude-opus", "provider": "anthropic" },
+  "strategy": "judgment-based",
+  "cost": 0.0450,
+  "confidence": 0.92,
+  "latencyMs": 3200
 }
 ```
 
@@ -57,13 +60,12 @@ Routes LLM requests using a two-tier approach: cheap workhorse models (KAT-Coder
 **Tool Call:**
 ```json
 {
-  "name": "route_judgment_based",
+  "name": "route_request",
   "arguments": {
     "prompt": "Evaluate the correctness of this mathematical proof...",
-    "task_type": "evaluation",
-    "confidence_threshold": 0.8,
-    "require_consensus": true,
-    "max_judge_invocations": 3
+    "strategy": "judgment-based",
+    "confidenceThreshold": 0.8,
+    "maxTokens": 8000
   }
 }
 ```
@@ -71,14 +73,29 @@ Routes LLM requests using a two-tier approach: cheap workhorse models (KAT-Coder
 **Expected Response:**
 ```json
 {
-  "primary_model": "kimi-chat",
-  "judge_model": "gpt-4-turbo",
-  "consensus_models": ["claude-opus", "gpt-4-turbo"],
-  "confidence_score": 0.92,
-  "escalated": true,
-  "total_cost": 0.078
+  "model": { "id": "gpt-4-turbo", "provider": "openai" },
+  "strategy": "judgment-based",
+  "cost": 0.0780,
+  "confidence": 0.92,
+  "latencyMs": 4500
 }
 ```
+
+## Programmatic Usage
+
+```typescript
+import { JudgmentBasedStrategy } from '@reaatech/llm-router-strategies';
+
+const strategy = new JudgmentBasedStrategy({
+  workhorsePool: ['kat-coder-pro', 'kimi-chat'],
+  judgePool: ['claude-opus', 'gpt-4-turbo'],
+  escalationThreshold: 0.7,
+  maxJudgeInvocations: 2,
+  consensusRequired: false,
+});
+```
+
+See the `@reaatech/llm-router-strategies` README for the full API reference.
 
 ## Error Handling
 
@@ -88,11 +105,11 @@ Routes LLM requests using a two-tier approach: cheap workhorse models (KAT-Coder
 |-------|-------|----------|
 | `JUDGE_UNAVAILABLE` | All judge models are circuit-broken | Return workhorse result with confidence warning |
 | `CONSENSUS_TIMEOUT` | Consensus not reached within max invocations | Return best available result |
-| `CONFIDENCE_CALCULATION_ERROR` | Error computing confidence score | Default to escalation |
+| `CONFIDENCE_CALCULATION_ERROR` | Error computing confidence score | Default to escalation for safety |
 
 ### Recovery Strategies
 
-1. **Judge unavailable**: Return workhorse result with low-confidence flag
+1. **Judge unavailable**: Return workhorse result with low-confidence flag — circuit breakers (via `@reaatech/llm-router-fallback`) handle this automatically
 2. **Consensus timeout**: Return majority vote or highest-confidence result
 3. **Confidence error**: Default to escalation for safety
 
@@ -118,11 +135,10 @@ Routes LLM requests using a two-tier approach: cheap workhorse models (KAT-Coder
 
 ### Audit Logging
 
-All judgment-based routing decisions are logged with:
+All judgment-based routing decisions are logged via `@reaatech/llm-router-engine` observability with:
 - `request_id` — unique request identifier
-- `task_type` — type of task (code_review, evaluation, etc.)
-- `primary_model` — workhorse model used
-- `judge_model` — judge model used (if escalated)
-- `confidence_score` — workhorse confidence
-- `escalated` — whether escalation occurred
+- `strategy` — always `judgment-based`
+- `primary_model` — workhorse model used (if not escalated)
+- `escalated_model` — judge model used (if escalated)
+- `confidence_score` — route confidence
 - `total_cost` — combined cost of workhorse + judge

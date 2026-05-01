@@ -1,106 +1,90 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
+  # Add `push: branches: [main]` AFTER the first manual publish succeeds.
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: 22
 
 jobs:
-  # Build and publish to npm
-  npm:
-    name: Publish to npm
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '22'
-          registry-url: 'https://registry.npmjs.org'
-          cache: 'npm'
-          cache-dependency-path: package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run tests
-        run: npm test
-
-      - name: Build
-        run: npm run build
-
-      - name: Publish to npm
-        run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-  # Build and push Docker image
-  docker:
-    name: Publish Docker Image
+  release:
+    name: Release
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
+      pull-requests: write
+      id-token: write
       packages: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v4
+        uses: actions/checkout@v4
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v6
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          images: ghcr.io/${{ github.repository }}
-          tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=raw,value=latest
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org'
 
-      - name: Build and push
-        uses: docker/build-push-action@v7
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm build
+
+      - name: Create release PR or publish to npm
+        id: changesets
+        uses: changesets/action@v1
         with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  # Create GitHub Release
-  github-release:
-    name: Create GitHub Release
-    runs-on: ubuntu-latest
-    needs: [npm, docker]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Generate changelog
-        id: changelog
-        run: |
-          echo "## What's Changed" > changelog.md
-          git log $(git describe --tags --abbrev=0 HEAD^)..HEAD --pretty=format:"- %s" >> changelog.md
-          cat changelog.md
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v3
-        with:
-          body_path: changelog.md
-          draft: false
-          prerelease: ${{ contains(github.ref, 'beta') || contains(github.ref, 'alpha') }}
-          files: |
-            dist/src/*.js
+          publish: pnpm release
+          version: pnpm version-packages
+          commit: 'chore(release): version packages'
+          title: 'chore(release): version packages'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: 'true'
+
+      - name: Mirror published packages to GitHub Packages
+        if: steps.changesets.outputs.published == 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PUBLISHED_PACKAGES: ${{ steps.changesets.outputs.publishedPackages }}
+        run: |
+          cat > .npmrc <<EOF
+          @reaatech:registry=https://npm.pkg.github.com
+          //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
+          EOF
+
+          pkg_to_dir() {
+            case "$1" in
+              @reaatech/llm-router-core)       echo "core" ;;
+              @reaatech/llm-router-strategies) echo "strategies" ;;
+              @reaatech/llm-router-fallback)   echo "fallback" ;;
+              @reaatech/llm-router-telemetry)  echo "telemetry" ;;
+              @reaatech/llm-router-mcp)        echo "mcp" ;;
+              @reaatech/llm-router-engine)     echo "engine" ;;
+              @reaatech/llm-router-cli)        echo "cli" ;;
+              *) echo "" ;;
+            esac
+          }
+
+          echo "$PUBLISHED_PACKAGES" | jq -r '.[].name' | while read -r name; do
+            dir="packages/$(pkg_to_dir "$name")"
+            if [ -n "$dir" ] && [ -d "$dir" ]; then
+              echo "Mirroring $name -> $dir"
+              (cd "$dir" && npm publish --registry=https://npm.pkg.github.com)
+            else
+              echo "Skipping $name (no mapping)"
+            fi
+          done

@@ -2,13 +2,15 @@
 
 ## Capability
 
-Routes LLM requests to the fastest available model based on historical latency data, current queue depth, and timeout constraints. Prioritizes response time over cost.
+Routes LLM requests to the fastest available model based on historical latency data, current queue depth, and timeout constraints. Prioritizes response time over cost. Provided by `@reaatech/llm-router-strategies` via the `LatencyOptimizedStrategy` class.
 
 ## MCP Tools
 
+The llm-router MCP server (`@reaatech/llm-router-mcp`) exposes routing through a unified `route_request` tool:
+
 | Tool | Input Schema | Output | Rate Limit |
 |------|-------------|--------|------------|
-| `route_latency_optimized` | `{ prompt: string, timeout_ms?: number, target_p99_ms?: number, required_capabilities?: string[] }` | `{ model_id: string, predicted_latency_ms: number, historical_p50_ms: number, historical_p99_ms: number }` | 100 RPM |
+| `route_request` (strategy: latency-optimized) | `{ prompt: string, timeoutMs?: number, confidenceThreshold?: number, requiredCapabilities?: string[] }` | `{ model: {...}, strategy: string, cost: number, confidence: number, latencyMs: number, result: {...} }` | 100 RPM |
 
 ## Usage Examples
 
@@ -19,11 +21,12 @@ Routes LLM requests to the fastest available model based on historical latency d
 **Tool Call:**
 ```json
 {
-  "name": "route_latency_optimized",
+  "name": "route_request",
   "arguments": {
     "prompt": "Hello, how are you?",
-    "timeout_ms": 3000,
-    "target_p99_ms": 2000
+    "strategy": "latency-optimized",
+    "timeoutMs": 3000,
+    "confidenceThreshold": 0.9
   }
 }
 ```
@@ -31,10 +34,11 @@ Routes LLM requests to the fastest available model based on historical latency d
 **Expected Response:**
 ```json
 {
-  "model_id": "glm-edge",
-  "predicted_latency_ms": 1500,
-  "historical_p50_ms": 1200,
-  "historical_p99_ms": 1800
+  "model": { "id": "glm-edge", "provider": "zhipu" },
+  "strategy": "latency-optimized",
+  "cost": 0.0002,
+  "confidence": 0.95,
+  "latencyMs": 320
 }
 ```
 
@@ -45,11 +49,12 @@ Routes LLM requests to the fastest available model based on historical latency d
 **Tool Call:**
 ```json
 {
-  "name": "route_latency_optimized",
+  "name": "route_request",
   "arguments": {
     "prompt": "How do I reverse a string in Python?",
-    "required_capabilities": ["code"],
-    "timeout_ms": 5000
+    "strategy": "latency-optimized",
+    "requiredCapabilities": ["code"],
+    "timeoutMs": 5000
   }
 }
 ```
@@ -57,12 +62,27 @@ Routes LLM requests to the fastest available model based on historical latency d
 **Expected Response:**
 ```json
 {
-  "model_id": "kat-coder-pro",
-  "predicted_latency_ms": 2800,
-  "historical_p50_ms": 2200,
-  "historical_p99_ms": 3500
+  "model": { "id": "kat-coder-pro", "provider": "kuaishou" },
+  "strategy": "latency-optimized",
+  "cost": 0.0015,
+  "confidence": 0.88,
+  "latencyMs": 520
 }
 ```
+
+## Programmatic Usage
+
+```typescript
+import { LatencyOptimizedStrategy } from '@reaatech/llm-router-strategies';
+
+const strategy = new LatencyOptimizedStrategy({
+  modelPool: ['glm-edge', 'kat-coder-pro'],
+  targetP99Ms: 2000,
+  defaultTimeoutMs: 3000,
+});
+```
+
+See the `@reaatech/llm-router-strategies` README for the full API reference.
 
 ## Error Handling
 
@@ -70,20 +90,21 @@ Routes LLM requests to the fastest available model based on historical latency d
 
 | Error | Cause | Recovery |
 |-------|-------|----------|
-| `NO_MODEL_MEETS_TIMEOUT` | No model can meet timeout requirement | Relax timeout or return error |
-| `INSUFFICIENT_LATENCY_DATA` | Not enough historical data | Use conservative estimate |
+| `NO_MODEL_MEETS_TIMEOUT` | No model can meet timeout requirement | Relax timeout or return error with fastest available model |
+| `INSUFFICIENT_LATENCY_DATA` | Not enough historical data | Use conservative estimate, warm up with a few requests |
 | `ALL_MODELS_DEGRADED` | All models experiencing high latency | Fall back to cost-optimized strategy |
 
 ### Recovery Strategies
 
 1. **No model meets timeout**: Suggest increased timeout or fall back to best-effort
-2. **Insufficient data**: Use p99 estimate with warning flag
+2. **Insufficient data**: Use p99 estimate with warning flag, data improves over time
 3. **All models degraded**: Trigger alert, use cost-optimized fallback
 
 ### Escalation Paths
 
 - If latency consistently exceeds targets, trigger infrastructure alert
 - If all models are degraded, escalate to operations team
+- Circuit breaker integration (via `@reaatech/llm-router-fallback`) skips degraded models automatically
 
 ## Security Considerations
 
@@ -101,7 +122,7 @@ Routes LLM requests to the fastest available model based on historical latency d
 
 ### Audit Logging
 
-All latency-optimized routing decisions are logged with:
+All latency-optimized routing decisions are logged via `@reaatech/llm-router-engine` observability with:
 - `request_id` — unique request identifier
 - `timeout_ms` — requested timeout
 - `selected_model` — model chosen
