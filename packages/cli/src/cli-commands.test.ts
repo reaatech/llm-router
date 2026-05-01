@@ -1,6 +1,6 @@
+import path from 'node:path';
 import { ProviderClientFactory } from '@reaatech/llm-router-engine';
 import { describe, expect, it } from 'vitest';
-import path from 'node:path';
 import { benchmarkCommand } from './commands/benchmark.command.js';
 import { costReportCommand } from './commands/cost-report.command.js';
 import { routeCommand } from './commands/route.command.js';
@@ -79,7 +79,6 @@ describe('CLI commands', () => {
       process.stdout.write = originalWrite;
       process.stderr.write = originalErrorWrite;
       process.env.GLM_API_KEY = undefined;
-      delete process.env.GLM_API_KEY;
       factory.reset();
       process.exitCode = 0;
     }
