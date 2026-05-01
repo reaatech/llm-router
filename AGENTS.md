@@ -23,47 +23,90 @@ model routing, budget enforcement, and quality-aware model selection.
 
 ## Architecture Overview
 
+`llm-router` is a **pnpm monorepo** of 7 packages published under the `@reaatech`
+scope. The dependency graph:
+
 ```
-┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│   AI Client     │────▶│   llm-router     │────▶│  Model Pool     │
-│  (Agent/MCP)    │     │  (Routing Core)  │     │  (Multi-LLM)    │
-└─────────────────┘     └──────────────────┘     └─────────────────┘
-                                │
-                                ▼
-                       ┌──────────────────┐
-                       │  Cost Telemetry  │
-                       │  + Eval Hooks    │
-                       └──────────────────┘
+@reaatech/llm-router-core          (types, schemas — zero workspace deps)
+    │
+    ├── @reaatech/llm-router-strategies  (cost/latency/judgment/capability)
+    ├── @reaatech/llm-router-fallback    (circuit breakers, chains, retry)
+    ├── @reaatech/llm-router-telemetry   (cost tracking, budgets, metrics)
+    └── @reaatech/llm-router-mcp         (MCP server + tools)
+    │
+    └── @reaatech/llm-router-engine      (router, registry, eval, observability)
+           │
+           └── @reaatech/llm-router-cli  (CLI: route, benchmark, report, validate)
 ```
 
 ### Key Components
 
-| Component | Location | Purpose |
-|-----------|----------|---------|
-| **Routing Engine** | `src/strategies/` | Pluggable routing strategies (cost/latency/judgment) |
-| **Model Registry** | `src/registry/` | Model definitions, capabilities, pricing |
-| **Fallback Chains** | `src/fallback/` | Degradation paths with circuit breakers |
-| **Cost Telemetry** | `src/telemetry/` | Per-model cost tracking and budgeting |
-| **Eval Hooks** | `src/eval/` | Quality scoring and A/B testing |
-| **MCP Server** | `src/mcp-server/` | Expose router as MCP tools |
+| Component | Package | Purpose |
+|-----------|---------|---------|
+| **Routing Engine** | `@reaatech/llm-router-engine` | Main `LLMRouter` class, model registry, config loading |
+| **Strategies** | `@reaatech/llm-router-strategies` | Pluggable routing strategies (cost/latency/judgment/capability) |
+| **Fallback Chains** | `@reaatech/llm-router-fallback` | Degradation paths with circuit breakers and retry logic |
+| **Cost Telemetry** | `@reaatech/llm-router-telemetry` | Per-model cost tracking, budget enforcement, metrics |
+| **Eval Hooks** | `@reaatech/llm-router-engine` | Quality scoring, A/B testing, pre/post execution hooks |
+| **MCP Server** | `@reaatech/llm-router-mcp` | Expose router as MCP tools for agent integration |
+| **CLI** | `@reaatech/llm-router-cli` | Route, benchmark, cost-report, and validate-config commands |
+| **Core Types** | `@reaatech/llm-router-core` | All shared TypeScript types, Zod schemas, domain enums |
+
+---
+
+## Getting Started
+
+### As a consumer
+
+```bash
+# Install the engine (pulls in core, strategies, fallback, telemetry automatically)
+pnpm add @reaatech/llm-router-engine
+
+# Or install individual packages as needed
+pnpm add @reaatech/llm-router-core
+pnpm add @reaatech/llm-router-telemetry
+pnpm add @reaatech/llm-router-mcp
+```
+
+### As a contributor
+
+```bash
+git clone https://github.com/reaatech/llm-router.git
+cd llm-router
+pnpm install
+pnpm build        # turbo run build — builds all 7 packages in dep order
+pnpm test         # turbo run test
+pnpm lint         # biome check .
+pnpm typecheck    # tsc --noEmit -p tsconfig.typecheck.json
+```
+
+The monorepo uses:
+- **pnpm** for workspaces and strict dependency resolution
+- **Turborepo** for task orchestration
+- **tsup** for bundling (dual CJS/ESM per package)
+- **Biome** for linting and formatting (replaces ESLint + Prettier)
+- **Changesets** for versioning and CHANGELOG generation
+
+Publishing is handled via Changesets — see `.changeset/config.json` for configuration.
 
 ---
 
 ## Routing Strategies
 
-The router supports multiple pluggable strategies for model selection:
+The router supports multiple pluggable strategies for model selection. All 
+strategies implement the `RoutingStrategy` interface from `@reaatech/llm-router-core`.
 
 ### Cost-Optimized Routing
 
 Selects the cheapest model that meets requirements while respecting budget constraints.
 
-```yaml
-strategies:
-  default:
-    type: cost-optimized
-    workhorse_pool: [kat-coder-pro, kimi-chat, glm-edge]
-    budget_per_request: 0.05
-    max_tokens: 10000
+```typescript
+import { CostOptimizedStrategy } from '@reaatech/llm-router-strategies';
+
+new CostOptimizedStrategy({
+  workhorsePool: ['kat-coder-pro', 'kimi-chat', 'glm-edge'],
+  budgetPerRequest: 0.05,
+});
 ```
 
 **When to use:** High-volume, routine tasks where cost is the primary concern.
@@ -72,13 +115,14 @@ strategies:
 
 Selects the fastest model based on historical latency data and current conditions.
 
-```yaml
-strategies:
-  real-time:
-    type: latency-optimized
-    workhorse_pool: [glm-edge, kat-coder-pro]
-    timeout_ms: 3000
-    target_p99_ms: 2000
+```typescript
+import { LatencyOptimizedStrategy } from '@reaatech/llm-router-strategies';
+
+new LatencyOptimizedStrategy({
+  modelPool: ['glm-edge', 'kat-coder-pro'],
+  targetP99Ms: 2000,
+  defaultTimeoutMs: 3000,
+});
 ```
 
 **When to use:** Interactive applications where response time is critical.
@@ -88,15 +132,16 @@ strategies:
 Uses cheap workhorse models for routine tasks, escalates to premium judge models
 for complex reasoning, debugging, or evaluation.
 
-```yaml
-strategies:
-  complex-tasks:
-    type: judgment-based
-    workhorse_pool: [kat-coder-pro, kimi-chat]
-    judge_pool: [claude-opus, gpt-4-turbo]
-    escalation_threshold: 0.7
-    max_judge_invocations: 2
-    consensus_required: false
+```typescript
+import { JudgmentBasedStrategy } from '@reaatech/llm-router-strategies';
+
+new JudgmentBasedStrategy({
+  workhorsePool: ['kat-coder-pro', 'kimi-chat'],
+  judgePool: ['claude-opus', 'gpt-4-turbo'],
+  escalationThreshold: 0.7,
+  maxJudgeInvocations: 2,
+  consensusRequired: false,
+});
 ```
 
 **When to use:** Tasks requiring high-quality reasoning, code review, or when
@@ -106,19 +151,42 @@ the workhorse model's confidence is low.
 
 Routes based on required capabilities (code, vision, long-context, etc.).
 
-```yaml
-strategies:
-  code-review:
-    type: capability-based
-    required_capabilities: [code, reasoning]
-    preferred_models: [kat-coder-pro, gpt-4-turbo]
+```typescript
+import { CapabilityBasedStrategy } from '@reaatech/llm-router-strategies';
+
+new CapabilityBasedStrategy({
+  preferredModels: {
+    code: ['kat-coder-pro', 'gpt-4-turbo'],
+    'complex-reasoning': ['claude-opus'],
+  },
+});
 ```
 
 **When to use:** Tasks with specific capability requirements.
 
+### Strategy Orchestrator
+
+Evaluates all registered strategies in priority order:
+
+```typescript
+import { StrategyOrchestrator } from '@reaatech/llm-router-strategies';
+
+const orchestrator = new StrategyOrchestrator();
+orchestrator.register(new CostOptimizedStrategy());
+orchestrator.register(new LatencyOptimizedStrategy());
+
+// Or build from YAML config
+const orchestrator = StrategyOrchestrator.fromConfig(config.strategies, {
+  workhorsePool: config.models.workhorses.map(m => m.id),
+  judgePool: config.models.judges.map(m => m.id),
+});
+```
+
 ---
 
 ## Model Configuration
+
+Models are defined in YAML and validated at load time. Two conceptual roles:
 
 ### Workhorse Models (Cost-Effective)
 
@@ -215,6 +283,21 @@ fallback_chains:
 | **OPEN** | Model is unhealthy, skip to next in chain |
 | **HALF_OPEN** | Testing if model has recovered |
 
+```typescript
+import { FallbackChain, CircuitBreaker } from '@reaatech/llm-router-fallback';
+
+const chain = new FallbackChain({
+  name: 'code-review-chain',
+  models: ['kat-coder-pro', 'glm-edge', 'kimi-chat'],
+  circuitBreaker: { failureThreshold: 5, resetTimeoutMs: 60000, halfOpenMaxCalls: 3 },
+});
+
+chain.registerModels(allModels);
+const result = await chain.executeFrom('kat-coder-pro', async (model) => {
+  return await callLLM(model);
+}, allModels);
+```
+
 ---
 
 ## Cost Management
@@ -244,18 +327,24 @@ budgets:
 The router tracks costs in real-time:
 
 ```typescript
-import { createRouter } from 'llm-router';
+import { LLMRouter, parseRouterConfig } from '@reaatech/llm-router-engine';
 
-const router = createRouter(config);
+const router = LLMRouter.fromConfig(parseRouterConfig(configYaml), {
+  executeModel: myExecutor,
+});
 
 const result = await router.route({
   prompt: 'Review this code...',
   strategy: 'cost-optimized',
-  budget_id: 'user-123',
+  budgetId: 'user-123',
 });
 
 console.log(`Cost: $${result.cost.toFixed(6)}`);
-console.log(`Remaining budget: $${result.budget_remaining.toFixed(2)}`);
+
+const budget = router.getBudget('user-123');
+if (budget) {
+  console.log(`Remaining budget: $${budget.remaining.toFixed(2)}`);
+}
 ```
 
 ---
@@ -266,23 +355,14 @@ console.log(`Remaining budget: $${result.budget_remaining.toFixed(2)}`);
 
 Integrate quality scoring to improve routing decisions:
 
-```yaml
-eval:
-  quality_scorer:
-    type: llm-as-judge
-    judge_model: claude-opus
-    scoring_criteria:
-      - relevance
-      - correctness
-      - completeness
-    scale: 1-5
+```typescript
+import { QualityScorer, createRuleBasedScorer } from '@reaatech/llm-router-engine';
 
-  ab_testing:
-    enabled: true
-    traffic_split:
-      kat-coder-pro: 0.6
-      gpt-4-turbo: 0.4
-    statistical_threshold: 0.95
+const scorer = new QualityScorer();
+scorer.register('rule-based', createRuleBasedScorer(), true);
+
+const score = await scorer.score(request, result, model);
+console.log(score.overall, score.relevance, score.correctness);
 ```
 
 ### Pre-Routing Hooks
@@ -290,10 +370,11 @@ eval:
 Modify requests before routing:
 
 ```typescript
-router.addHook('pre-routing', async (request) => {
-  // Add context based on user tier
-  if (request.user_tier === 'premium') {
-    request.allowed_models = ['claude-opus', 'gpt-4-turbo'];
+import { evalHooksManager } from '@reaatech/llm-router-engine';
+
+evalHooksManager.onPreRouting(async (request, context) => {
+  if (request.userTier === 'premium') {
+    request.confidenceThreshold = 0.95;
   }
   return request;
 });
@@ -304,11 +385,24 @@ router.addHook('pre-routing', async (request) => {
 Score results after execution:
 
 ```typescript
-router.addHook('post-execution', async (result) => {
-  // Send to eval pipeline
-  const score = await evaluateQuality(result);
-  result.metadata.quality_score = score;
+evalHooksManager.onPostExecution(async (result, decision, request, context) => {
+  await analytics.track('routing_complete', {
+    modelId: decision.modelId,
+    cost: result.actualCost,
+  });
   return result;
+});
+```
+
+### A/B Testing
+
+```typescript
+import { ABTestManager } from '@reaatech/llm-router-engine';
+
+const ab = new ABTestManager();
+ab.start({
+  testA: { modelId: 'glm-edge', trafficPercent: 50 },
+  testB: { modelId: 'kat-coder-pro', trafficPercent: 50 },
 });
 ```
 
@@ -316,41 +410,42 @@ router.addHook('post-execution', async (result) => {
 
 ## MCP Integration
 
-The router exposes MCP tools for agent integration:
+The MCP package exposes three tools for agent integration:
 
-### route_request Tool
+```typescript
+import { createMCPServer } from '@reaatech/llm-router-mcp';
 
-```json
-{
-  "name": "route_request",
-  "arguments": {
-    "prompt": "Review this code for bugs",
-    "strategy": "judgment-based",
-    "max_tokens": 4096,
-    "budget_id": "team-alpha"
-  }
-}
+const server = createMCPServer({ name: 'llm-router', version: '1.0.0' });
+
+server.setRouter({
+  async route(request) {
+    const result = await router.route(request);
+    return { model: result.model, strategy: result.strategy, cost: result.cost, confidence: result.confidence, latencyMs: result.latencyMs, result: result.result };
+  },
+  getModels: () => router.getModels(),
+  getBudget: (id) => router.getBudget(id),
+});
+
+await server.start();
 ```
 
-### get_model_info Tool
+### Tools
+
+| Tool | Purpose |
+|------|---------|
+| `route_request` | Route a prompt through the router with full decision + execution |
+| `get_model_info` | Return capabilities, pricing, and provider for a model ID |
+| `get_cost_report` | Generate a cost report for a budget/period |
+
+### Claude Desktop Configuration
 
 ```json
 {
-  "name": "get_model_info",
-  "arguments": {
-    "model_id": "kat-coder-pro"
-  }
-}
-```
-
-### get_cost_report Tool
-
-```json
-{
-  "name": "get_cost_report",
-  "arguments": {
-    "budget_id": "team-alpha",
-    "period": "today"
+  "mcpServers": {
+    "llm-router": {
+      "command": "npx",
+      "args": ["@reaatech/llm-router-mcp"]
+    }
   }
 }
 ```
@@ -381,16 +476,13 @@ examples:
   - "What's my remaining API budget?"
 ```
 
-### Agent-to-Agent Routing
+### CLI Usage
 
-```
-User Query → Orchestrator (e.g. agent-mesh, LangGraph, AutoGen)
-                   │
-                   ▼
-             llm-router (agent)
-                   │
-                   ▼
-             Selected LLM Model
+```bash
+llm-router route --config llm-router.config.yaml --strategy cost-optimized --prompt "..."
+llm-router benchmark --config llm-router.config.yaml --models "glm-edge,kat-coder-pro" --runs 3
+llm-router cost-report --config llm-router.config.yaml --period today --budgetId default
+llm-router validate-config --config llm-router.config.yaml
 ```
 
 ---
@@ -399,20 +491,20 @@ User Query → Orchestrator (e.g. agent-mesh, LangGraph, AutoGen)
 
 ### API Key Management
 
-- All API keys come from environment variables
+- All API keys come from environment variables (e.g., `GLM_API_KEY`, `ANTHROPIC_API_KEY`)
 - Never log API keys or tokens
 - Use separate keys per model/provider
 
 ### Budget Isolation
 
-- Each user/team has isolated budget tracking
+- Each user/team has isolated budget tracking via `budgetId`
 - Hard limits prevent budget overruns
 - Audit logging for all cost events
 
 ### Input Sanitization
 
 - Prompts are validated before sending to models
-- PII is redacted from logs
+- PII is redacted from logs via `redactPIIPatterns()` from the engine's observability module
 - Token limits prevent runaway costs
 
 ---
@@ -421,7 +513,7 @@ User Query → Orchestrator (e.g. agent-mesh, LangGraph, AutoGen)
 
 ### Structured Logging
 
-Every routing decision is logged with:
+Every routing decision is logged as structured JSON (Pino):
 
 ```json
 {
@@ -448,7 +540,7 @@ Every routing decision is logged with:
 
 ### Tracing
 
-Each routing decision creates a trace with spans for:
+Each routing decision creates an OpenTelemetry trace with spans for:
 - Strategy evaluation
 - Model selection
 - Fallback chain execution
@@ -476,9 +568,8 @@ Before deploying an agent using llm-router:
 
 ## References
 
-- **ARCHITECTURE.md** — System design deep dive
-- **DEV_PLAN.md** — Development checklist
-- **README.md** — Quick start and overview
-- **config/examples/** — Example configurations
+- **ARCHITECTURE.md** — System design deep dive with data flow diagrams
+- **README.md** — Quick start and package overview
+- **config/examples/** — Example configurations (cost-optimized, low-latency, workhorse-judge)
 - **skills/** — Domain-specific guides for each routing capability
 - **MCP Specification** — https://modelcontextprotocol.io/

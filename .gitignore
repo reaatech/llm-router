@@ -3,6 +3,13 @@ node_modules/
 
 # Build output
 dist/
+.turbo/
+
+# Stray tsup artifacts in src/ (never commit these)
+packages/*/src/**/*.js
+packages/*/src/**/*.js.map
+packages/*/src/**/*.d.ts
+packages/*/src/**/*.d.ts.map
 
 # Environment files
 .env

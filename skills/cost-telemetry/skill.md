@@ -2,15 +2,16 @@
 
 ## Capability
 
-Provides real-time cost tracking, budget management, and spend analytics across all LLM model usage. Tracks per-request costs, enforces budget limits, detects anomalies, and generates detailed cost reports for chargeback and optimization.
+Provides real-time cost tracking, budget management, and spend analytics across all LLM model usage. Tracks per-request costs, enforces budget limits, detects anomalies, and generates detailed cost reports. Provided by `@reaatech/llm-router-telemetry` and consumed by `@reaatech/llm-router-engine`.
 
 ## MCP Tools
 
+The llm-router MCP server (`@reaatech/llm-router-mcp`) exposes two telemetry tools:
+
 | Tool | Input Schema | Output | Rate Limit |
 |------|-------------|--------|------------|
-| `get_cost_report` | `{ budget_id?: string, period?: string, group_by?: string }` | `{ total_cost: number, breakdown: [{ model_id: string, cost: number, tokens: { input: number, output: number } }], budget_remaining?: number }` | 30 RPM |
-| `check_budget` | `{ budget_id: string }` | `{ budget_id: string, daily_limit: number, spent: number, remaining: number, percentage_used: number, status: 'ok' \| 'warning' \| 'exceeded' }` | 100 RPM |
-| `estimate_cost` | `{ prompt: string, model_id: string, max_tokens?: number }` | `{ estimated_cost: number, estimated_tokens: { input: number, output: number }, cost_per_million_input: number, cost_per_million_output: number }` | 100 RPM |
+| `get_cost_report` | `{ budgetId: string, period?: string }` | `{ totalCost: number, totalRequests: number, budgetId: string, period: string, byModel: [...], byStrategy: {...}, remainingBudget: number }` | 30 RPM |
+| `get_model_info` | `{ modelId: string }` | `{ id: string, provider: string, capabilities: string[], costPerMillionInput: number, costPerMillionOutput: number, maxTokens: number }` | 100 RPM |
 
 ## Usage Examples
 
@@ -23,9 +24,8 @@ Provides real-time cost tracking, budget management, and spend analytics across 
 {
   "name": "get_cost_report",
   "arguments": {
-    "budget_id": "team-alpha",
-    "period": "month",
-    "group_by": "model"
+    "budgetId": "team-alpha",
+    "period": "month"
   }
 }
 ```
@@ -33,38 +33,29 @@ Provides real-time cost tracking, budget management, and spend analytics across 
 **Expected Response:**
 ```json
 {
-  "total_cost": 45.67,
-  "breakdown": [
-    {
-      "model_id": "kat-coder-pro",
-      "cost": 23.45,
-      "tokens": { "input": 1200000, "output": 450000 }
-    },
-    {
-      "model_id": "glm-edge",
-      "cost": 12.22,
-      "tokens": { "input": 2100000, "output": 320000 }
-    },
-    {
-      "model_id": "claude-opus",
-      "cost": 10.00,
-      "tokens": { "input": 50000, "output": 8000 }
-    }
+  "totalCost": 45.67,
+  "totalRequests": 1250,
+  "budgetId": "team-alpha",
+  "period": "month",
+  "byModel": [
+    { "modelId": "kat-coder-pro", "cost": 23.45, "percentage": 51.4, "requests": 600 },
+    { "modelId": "glm-edge", "cost": 12.22, "percentage": 26.8, "requests": 580 },
+    { "modelId": "claude-opus", "cost": 10.00, "percentage": 21.8, "requests": 70 }
   ],
-  "budget_remaining": 54.33
+  "remainingBudget": 54.33
 }
 ```
 
-### Example 2: Check Budget Status
+### Example 2: Check Model Pricing
 
-**User Intent:** Check remaining budget for a specific project.
+**User Intent:** Look up the cost per token for a specific model before routing.
 
 **Tool Call:**
 ```json
 {
-  "name": "check_budget",
+  "name": "get_model_info",
   "arguments": {
-    "budget_id": "project-x"
+    "modelId": "claude-opus"
   }
 }
 ```
@@ -72,40 +63,48 @@ Provides real-time cost tracking, budget management, and spend analytics across 
 **Expected Response:**
 ```json
 {
-  "budget_id": "project-x",
-  "daily_limit": 100.00,
-  "spent": 75.50,
-  "remaining": 24.50,
-  "percentage_used": 75.5,
-  "status": "warning"
+  "id": "claude-opus",
+  "provider": "anthropic",
+  "capabilities": ["evaluation", "complex-reasoning"],
+  "costPerMillionInput": 15.00,
+  "costPerMillionOutput": 75.00,
+  "maxTokens": 200000,
+  "enabled": true
 }
 ```
 
-### Example 3: Estimate Cost Before Execution
+## Programmatic Usage
 
-**User Intent:** Estimate the cost of a request before sending it.
+```typescript
+import { CostTracker, BudgetManager, CostReporter } from '@reaatech/llm-router-telemetry';
+import { LLMRouter, parseRouterConfig } from '@reaatech/llm-router-engine';
 
-**Tool Call:**
-```json
-{
-  "name": "estimate_cost",
-  "arguments": {
-    "prompt": "Write a detailed analysis of...",
-    "model_id": "claude-opus",
-    "max_tokens": 4000
-  }
+// Build a router with budget tracking
+const router = LLMRouter.fromConfig(config, { executeModel: myExecutor });
+
+// Route a request — cost tracking is automatic
+const result = await router.route({ prompt: '...', budgetId: 'team-alpha' });
+console.log('Cost:', result.cost);
+
+// Check budget status
+const budget = router.getBudget('team-alpha');
+if (budget) {
+  console.log('Remaining:', budget.remaining, 'of', budget.dailyLimit);
 }
+
+// Register budget alerts
+import { BudgetManager } from '@reaatech/llm-router-telemetry';
+
+const manager = new BudgetManager();
+manager.register({
+  id: 'team-alpha',
+  dailyLimit: 100,
+  alertThresholds: [0.5, 0.75, 0.9],
+  hardLimit: true,
+});
 ```
 
-**Expected Response:**
-```json
-{
-  "estimated_cost": 0.09,
-  "estimated_tokens": { "input": 100, "output": 4000 },
-  "cost_per_million_input": 15.00,
-  "cost_per_million_output": 75.00
-}
-```
+See the `@reaatech/llm-router-telemetry` README for the full API reference.
 
 ## Error Handling
 
@@ -113,7 +112,7 @@ Provides real-time cost tracking, budget management, and spend analytics across 
 
 | Error | Cause | Recovery |
 |-------|-------|----------|
-| `BUDGET_NOT_FOUND` | Specified budget_id doesn't exist | Return error with available budgets |
+| `BUDGET_NOT_FOUND` | Specified budgetId doesn't exist | Return error with available budgets |
 | `COST_DATA_UNAVAILABLE` | Cost data not yet processed | Use cached estimate, mark as approximate |
 | `CALCULATION_ERROR` | Pricing data mismatch | Log error, use fallback pricing |
 
@@ -147,7 +146,6 @@ budgets:
     daily_limit: 100.00
     alert_thresholds: [0.5, 0.75, 0.9]
     hard_limit: true
-    alert_channels: [slack, email]
 ```
 
 ## Security Considerations
@@ -155,7 +153,7 @@ budgets:
 ### PII Handling
 
 - **Budget IDs are anonymized** — no user-identifiable information
-- **Cost data is aggregated** — individual request costs not exposed
+- **Cost data is aggregated** — individual request costs not exposed externally
 - **Access is role-based** — only authorized users can view cost reports
 
 ### Permission Requirements
@@ -166,9 +164,9 @@ budgets:
 
 ### Audit Logging
 
-All cost telemetry operations are logged with:
+All cost telemetry operations are logged via `@reaatech/llm-router-engine` observability with:
 - `request_id` — unique request identifier
-- `operation` — type of operation (report, check, estimate)
+- `operation` — type of operation (route, report, budget check)
 - `budget_id` — budget being queried
-- `result` — summary of result (cost, remaining, status)
-- `user_id` — hashed user identifier
+- `cost` — cost incurred
+- `tokens` — input/output token counts

@@ -2,13 +2,15 @@
 
 ## Capability
 
-Routes LLM requests to the cheapest available model that meets quality and capability requirements while respecting budget constraints.
+Routes LLM requests to the cheapest available model that meets quality and capability requirements while respecting budget constraints. Provided by `@reaatech/llm-router-strategies` via the `CostOptimizedStrategy` class.
 
 ## MCP Tools
 
+The llm-router MCP server (`@reaatech/llm-router-mcp`) exposes routing through a unified `route_request` tool. The strategy parameter selects the routing approach:
+
 | Tool | Input Schema | Output | Rate Limit |
 |------|-------------|--------|------------|
-| `route_cost_optimized` | `{ prompt: string, max_tokens?: number, required_capabilities?: string[], budget_id?: string }` | `{ model_id: string, cost: number, estimated_tokens: { input: number, output: number } }` | 100 RPM |
+| `route_request` (strategy: cost-optimized) | `{ prompt: string, maxTokens?: number, requiredCapabilities?: string[], budgetId?: string }` | `{ model: {...}, strategy: string, cost: number, confidence: number, latencyMs: number, result: {...} }` | 100 RPM |
 
 ## Usage Examples
 
@@ -19,11 +21,12 @@ Routes LLM requests to the cheapest available model that meets quality and capab
 **Tool Call:**
 ```json
 {
-  "name": "route_cost_optimized",
+  "name": "route_request",
   "arguments": {
     "prompt": "Summarize this article in 3 sentences...",
-    "max_tokens": 500,
-    "budget_id": "team-alpha"
+    "strategy": "cost-optimized",
+    "maxTokens": 500,
+    "budgetId": "team-alpha"
   }
 }
 ```
@@ -31,12 +34,11 @@ Routes LLM requests to the cheapest available model that meets quality and capab
 **Expected Response:**
 ```json
 {
-  "model_id": "glm-edge",
+  "model": { "id": "glm-edge", "provider": "zhipu" },
+  "strategy": "cost-optimized",
   "cost": 0.0003,
-  "estimated_tokens": {
-    "input": 200,
-    "output": 50
-  }
+  "confidence": 0.95,
+  "latencyMs": 320
 }
 ```
 
@@ -47,11 +49,12 @@ Routes LLM requests to the cheapest available model that meets quality and capab
 **Tool Call:**
 ```json
 {
-  "name": "route_cost_optimized",
+  "name": "route_request",
   "arguments": {
     "prompt": "Write a function to sort an array...",
-    "required_capabilities": ["code"],
-    "max_tokens": 2000
+    "strategy": "cost-optimized",
+    "requiredCapabilities": ["code"],
+    "maxTokens": 2000
   }
 }
 ```
@@ -59,14 +62,26 @@ Routes LLM requests to the cheapest available model that meets quality and capab
 **Expected Response:**
 ```json
 {
-  "model_id": "kat-coder-pro",
+  "model": { "id": "kat-coder-pro", "provider": "kuaishou" },
+  "strategy": "cost-optimized",
   "cost": 0.0025,
-  "estimated_tokens": {
-    "input": 100,
-    "output": 150
-  }
+  "confidence": 0.92,
+  "latencyMs": 520
 }
 ```
+
+## Programmatic Usage
+
+```typescript
+import { CostOptimizedStrategy } from '@reaatech/llm-router-strategies';
+
+const strategy = new CostOptimizedStrategy({
+  workhorsePool: ['kat-coder-pro', 'kimi-chat', 'glm-edge'],
+  budgetPerRequest: 0.05,
+});
+```
+
+See the `@reaatech/llm-router-strategies` README for the full API reference.
 
 ## Error Handling
 
@@ -74,13 +89,13 @@ Routes LLM requests to the cheapest available model that meets quality and capab
 
 | Error | Cause | Recovery |
 |-------|-------|----------|
-| `BUDGET_EXCEEDED` | Budget limit reached for budget_id | Return error, suggest increasing budget |
+| `BUDGET_EXCEEDED` | Budget limit reached for budgetId | Return error, suggest increasing budget or using a different budgetId |
 | `NO_QUALIFYING_MODELS` | No models match capability requirements | Return error with available capabilities |
 | `COST_CALCULATION_ERROR` | Token count or pricing error | Log error, use fallback cost estimate |
 
 ### Recovery Strategies
 
-1. **Budget exceeded**: Suggest alternative budget_id or increase limit
+1. **Budget exceeded**: Suggest alternative budgetId or request a budget increase
 2. **No qualifying models**: List available models and their capabilities
 3. **Cost calculation error**: Use cached cost estimate, log warning
 
@@ -88,6 +103,7 @@ Routes LLM requests to the cheapest available model that meets quality and capab
 
 - If cost optimization consistently fails, escalate to latency-optimized strategy
 - If budget is consistently exceeded, trigger budget review alert
+- Circuit breaker integration (via `@reaatech/llm-router-fallback`) skips unhealthy models automatically
 
 ## Security Considerations
 
@@ -95,7 +111,7 @@ Routes LLM requests to the cheapest available model that meets quality and capab
 
 - **Never log raw prompts** — hash or truncate before logging
 - **Never include budget details in client responses** — only show remaining budget
-- **Isolate budget tracking** — each budget_id is independent
+- **Isolate budget tracking** — each budgetId is independent
 
 ### Permission Requirements
 
@@ -105,7 +121,7 @@ Routes LLM requests to the cheapest available model that meets quality and capab
 
 ### Audit Logging
 
-All cost-based routing decisions are logged with:
+All cost-based routing decisions are logged via `@reaatech/llm-router-engine` observability with:
 - `request_id` — unique request identifier
 - `budget_id` — budget being charged
 - `selected_model` — model chosen

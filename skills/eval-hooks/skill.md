@@ -2,117 +2,129 @@
 
 ## Capability
 
-Provides quality scoring, A/B testing, and performance tracking for LLM routing decisions. Enables continuous optimization through automated quality evaluation, statistical A/B testing, and model performance analytics.
+Provides quality scoring, A/B testing, and performance tracking for LLM routing decisions. Enables continuous optimization through automated quality evaluation, statistical A/B testing, and model performance analytics. Provided by `@reaatech/llm-router-engine`.
 
 ## MCP Tools
 
-| Tool | Input Schema | Output | Rate Limit |
-|------|-------------|--------|------------|
-| `score_quality` | `{ request_id: string, model_id: string, response: string, criteria?: string[] }` | `{ overall_score: number, criteria_scores: { [key: string]: number }, confidence: number, feedback?: string }` | 50 RPM |
-| `run_ab_test` | `{ test_name: string, variants: [{ model_id: string, traffic_percentage: number }], duration_days?: number }` | `{ test_id: string, status: 'running' \| 'completed', winner?: string, statistical_significance?: number }` | 10 RPM |
-| `get_model_performance` | `{ model_id: string, period?: string }` | `{ model_id: string, avg_quality_score: number, avg_latency_ms: number, success_rate: number, cost_per_request: number }` | 30 RPM |
+Quality scoring and performance data are available via the router's internal eval hooks system. The MCP server does not expose dedicated eval tools — eval is configured in the router and runs automatically during `route_request`:
+
+| Tool | How eval integrates |
+|------|---------------------|
+| `route_request` | Post-execution hooks run quality scoring, update A/B test stats, and record performance metrics automatically when the router is configured with eval hooks |
+| `get_model_info` | Returns model metadata — performance data is tracked internally by `PerformanceTracker` |
+| `get_cost_report` | Returns cost data — quality and performance trends are available via the `ObservabilityDashboard` |
 
 ## Usage Examples
 
-### Example 1: Score Response Quality
+### Example 1: Quality Scoring via Route Request
 
-**User Intent:** Evaluate the quality of a model's response using automated criteria.
-
-**Tool Call:**
-```json
-{
-  "name": "score_quality",
-  "arguments": {
-    "request_id": "req-123",
-    "model_id": "kat-coder-pro",
-    "response": "Here's the code you requested...",
-    "criteria": ["correctness", "efficiency", "readability"]
-  }
-}
-```
-
-**Expected Response:**
-```json
-{
-  "overall_score": 4.2,
-  "criteria_scores": {
-    "correctness": 4.5,
-    "efficiency": 4.0,
-    "readability": 4.1
-  },
-  "confidence": 0.87,
-  "feedback": "Code is correct and well-structured. Consider optimizing the loop."
-}
-```
-
-### Example 2: Run A/B Test
-
-**User Intent:** Compare two models to determine which performs better for a specific task.
+**User Intent:** Route a request and get a quality score back with the response.
 
 **Tool Call:**
 ```json
 {
-  "name": "run_ab_test",
+  "name": "route_request",
   "arguments": {
-    "test_name": "code-generation-comparison",
-    "variants": [
-      { "model_id": "kat-coder-pro", "traffic_percentage": 0.5 },
-      { "model_id": "gpt-4-turbo", "traffic_percentage": 0.5 }
-    ],
-    "duration_days": 7
+    "prompt": "Write a function to calculate Fibonacci numbers...",
+    "strategy": "cost-optimized",
+    "maxTokens": 1000
   }
 }
 ```
 
-**Expected Response:**
+**Expected Response (with quality score when `responseEvaluator` is enabled):**
 ```json
 {
-  "test_id": "ab-test-456",
-  "status": "running",
-  "winner": null,
-  "statistical_significance": null
-}
-```
-
-**Completed Test Response:**
-```json
-{
-  "test_id": "ab-test-456",
-  "status": "completed",
-  "winner": "kat-coder-pro",
-  "statistical_significance": 0.95,
-  "results": {
-    "kat-coder-pro": { "avg_quality": 4.3, "avg_cost": 0.003 },
-    "gpt-4-turbo": { "avg_quality": 4.1, "avg_cost": 0.012 }
+  "model": { "id": "kat-coder-pro", "provider": "kuaishou" },
+  "strategy": "cost-optimized",
+  "cost": 0.0035,
+  "confidence": 0.91,
+  "latencyMs": 720,
+  "result": {
+    "content": "function fibonacci(n: number): number { ... }",
+    "qualityScore": 4.2,
+    "success": true
   }
 }
 ```
 
-### Example 3: Get Model Performance
+### Example 2: A/B Test via Programmatic Setup
 
-**User Intent:** View performance metrics for a specific model over the past week.
+**User Intent:** Compare two models to determine which performs better. Configured via code, not MCP.
 
-**Tool Call:**
-```json
-{
-  "name": "get_model_performance",
-  "arguments": {
-    "model_id": "kat-coder-pro",
-    "period": "week"
-  }
+```typescript
+import { ABTestManager, LLMRouter, parseRouterConfig } from '@reaatech/llm-router-engine';
+
+const ab = new ABTestManager();
+ab.start({
+  testA: { modelId: 'glm-edge', trafficPercent: 50 },
+  testB: { modelId: 'kat-coder-pro', trafficPercent: 50 },
+});
+
+// In your route handler, use the AB test to select
+const variant = ab.select();
+const result = await router.route({ prompt, modelId: variant.modelId });
+ab.record(variant, { latencyMs: result.latencyMs, qualityScore: result.result.qualityScore });
+```
+
+**Checking Results:**
+```typescript
+const stats = ab.getStats();
+console.log(`glm-edge: winRate=${stats.testA.winRate}, kat-coder-pro: winRate=${stats.testB.winRate}`);
+const winner = ab.getWinner(); // Returns the variant with the best stats
+```
+
+### Example 3: Model Performance Tracking
+
+**User Intent:** Check aggregated performance stats for a model. Available programmatically via `PerformanceTracker`.
+
+```typescript
+import { PerformanceTracker } from '@reaatech/llm-router-engine';
+
+const tracker = new PerformanceTracker();
+const allPerf = tracker.getAllPerformance(router.getModels());
+
+for (const perf of allPerf) {
+  console.log(
+    perf.modelId,
+    `avg: ${perf.latencyP50}ms`,
+    `p95: ${perf.latencyP95}ms`,
+    `success: ${(perf.successRate * 100).toFixed(1)}%`,
+  );
 }
 ```
 
-**Expected Response:**
-```json
-{
-  "model_id": "kat-coder-pro",
-  "avg_quality_score": 4.2,
-  "avg_latency_ms": 2340,
-  "success_rate": 0.97,
-  "cost_per_request": 0.0028
-}
+## Programmatic Usage
+
+### Quality Scoring
+
+```typescript
+import { QualityScorer, createRuleBasedScorer } from '@reaatech/llm-router-engine';
+
+const scorer = new QualityScorer();
+scorer.register('rule-based', createRuleBasedScorer(), true);
+
+const score = await scorer.score(request, result, model);
+console.log(score.overall, score.relevance, score.correctness);
 ```
+
+### Eval Hooks Manager
+
+```typescript
+import { evalHooksManager } from '@reaatech/llm-router-engine';
+
+evalHooksManager.onPreRouting(async (request, context) => {
+  request.confidenceThreshold = 0.95;
+  return request;
+});
+
+evalHooksManager.onPostExecution(async (result, decision, request, context) => {
+  await analytics.track('routing_complete', { modelId: decision.modelId, cost: result.actualCost });
+  return result;
+});
+```
+
+See the `@reaatech/llm-router-engine` README for the full API reference.
 
 ## Error Handling
 
@@ -150,34 +162,25 @@ Provides quality scoring, A/B testing, and performance tracking for LLM routing 
 
 ### Scoring Methods
 
-1. **LLM-as-Judge**: Use Claude/GPT to score responses
-2. **Rule-based**: Automated checks for specific criteria
-3. **Human feedback**: Thumbs up/down from users
-4. **Hybrid**: Weighted combination of above
+1. **Rule-based** (`createRuleBasedScorer`): Automated checks for specific criteria — included by default in `LLMRouter`
+2. **LLM-as-Judge**: Use a judge model (Claude/GPT-4) to score responses
+3. **Human feedback** (`HumanFeedbackStore`): Thumbs up/down from users
+4. **Hybrid**: Weighted combination of above via `createQualityScorerWithFeedback`
 
 ## A/B Testing
 
 ### Test Configuration
 
-```yaml
-ab_tests:
-  code-quality-test:
-    variants:
-      - model_id: kat-coder-pro
-        traffic_percentage: 0.5
-      - model_id: gpt-4-turbo
-        traffic_percentage: 0.5
-    success_metric: quality_score
-    minimum_sample_size: 1000
-    statistical_threshold: 0.95
+```typescript
+abTestManager.start({
+  testA: { modelId: 'kat-coder-pro', trafficPercent: 50 },
+  testB: { modelId: 'gpt-4-turbo', trafficPercent: 50 },
+});
 ```
 
 ### Statistical Methods
 
-- **Chi-squared test** for categorical outcomes
-- **T-test** for continuous metrics
-- **Bayesian methods** for sequential testing
-- **Bonferroni correction** for multiple comparisons
+The `ABTestManager` tracks per-variant aggregates (quality scores, latency, cost) and can compute win rates. For production use, integrate with a statistical testing library for significance calculations.
 
 ## Security Considerations
 
@@ -195,9 +198,8 @@ ab_tests:
 
 ### Audit Logging
 
-All eval hook operations are logged with:
+All eval hook operations are logged via `@reaatech/llm-router-engine` observability with:
 - `request_id` — unique request identifier
 - `operation` — type of operation (score, ab_test, performance)
 - `model_id` — model being evaluated
 - `result` — summary of result (score, winner, metrics)
-- `user_id` — hashed user identifier
