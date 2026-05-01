@@ -18,9 +18,12 @@ const model: ModelDefinition = {
 
 describe('ProviderClientFactory extras', () => {
   afterEach(() => {
-    process.env.OPENAI_API_KEY = undefined;
-    process.env.ANTHROPIC_API_KEY = undefined;
-    process.env.GOOGLE_API_KEY = undefined;
+    delete process.env.OPENAI_API_KEY;
+    delete process.env.ANTHROPIC_API_KEY;
+    delete process.env.GOOGLE_API_KEY;
+    delete process.env.KAT_CODER_API_KEY;
+    delete process.env.KIMI_API_KEY;
+    delete process.env.GLM_API_KEY;
     const factory = ProviderClientFactory.getInstance();
     factory.reset();
   });
@@ -85,9 +88,27 @@ describe('ProviderClientFactory extras', () => {
   });
 
   it('lists configured providers from environment', () => {
+    const saved: Record<string, string | undefined> = {
+      OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+      ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+      GOOGLE_API_KEY: process.env.GOOGLE_API_KEY,
+      KAT_CODER_API_KEY: process.env.KAT_CODER_API_KEY,
+      KIMI_API_KEY: process.env.KIMI_API_KEY,
+      GLM_API_KEY: process.env.GLM_API_KEY,
+    };
+    Object.keys(saved).forEach((k) => {
+      delete process.env[k];
+    });
+
     process.env.OPENAI_API_KEY = 'test-key';
     process.env.ANTHROPIC_API_KEY = 'test-key';
 
     expect(getConfiguredProviders()).toEqual(['OPENAI_API_KEY', 'ANTHROPIC_API_KEY']);
+
+    Object.keys(saved).forEach((k) => {
+      if (saved[k] !== undefined) {
+        process.env[k] = saved[k];
+      }
+    });
   });
 });

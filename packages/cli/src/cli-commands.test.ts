@@ -1,10 +1,13 @@
 import { ProviderClientFactory } from '@reaatech/llm-router-engine';
 import { describe, expect, it } from 'vitest';
+import path from 'node:path';
 import { benchmarkCommand } from './commands/benchmark.command.js';
 import { costReportCommand } from './commands/cost-report.command.js';
 import { routeCommand } from './commands/route.command.js';
 import { validateConfigCommand } from './commands/validate-config.command.js';
 import { writeError } from './output.js';
+
+const configPath = path.resolve(import.meta.dirname, '../../../llm-router.config.yaml');
 
 describe('CLI commands', () => {
   it('prints summaries for route, validate-config, benchmark, and cost-report', async () => {
@@ -38,32 +41,32 @@ describe('CLI commands', () => {
     }));
 
     try {
-      await validateConfigCommand({ config: 'llm-router.config.yaml' });
+      await validateConfigCommand({ config: configPath });
       await validateConfigCommand({ config: 'missing.yaml' });
       await routeCommand({
         prompt: 'hello',
         strategy: 'cost-optimized',
         userTier: 'standard',
-        config: 'llm-router.config.yaml',
+        config: configPath,
       });
       await costReportCommand({
         period: 'today',
-        config: 'llm-router.config.yaml',
+        config: configPath,
       });
       await costReportCommand({
         period: 'week',
         budgetId: 'default',
-        config: 'llm-router.config.yaml',
+        config: configPath,
       });
       await costReportCommand({
         period: 'month',
-        config: 'llm-router.config.yaml',
+        config: configPath,
       });
       await benchmarkCommand({
         prompt: 'hello',
         runs: 1,
         models: 'glm-edge',
-        config: 'llm-router.config.yaml',
+        config: configPath,
       });
       await routeCommand({
         prompt: 'hello',
@@ -76,6 +79,7 @@ describe('CLI commands', () => {
       process.stdout.write = originalWrite;
       process.stderr.write = originalErrorWrite;
       process.env.GLM_API_KEY = undefined;
+      delete process.env.GLM_API_KEY;
       factory.reset();
       process.exitCode = 0;
     }
