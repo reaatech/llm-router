@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@reaatech/llm-router-core": ["./packages/core/src/index.ts"],
+      "@reaatech/llm-router-strategies": ["./packages/strategies/src/index.ts"],
+      "@reaatech/llm-router-fallback": ["./packages/fallback/src/index.ts"],
+      "@reaatech/llm-router-telemetry": ["./packages/telemetry/src/index.ts"],
+      "@reaatech/llm-router-mcp": ["./packages/mcp/src/index.ts"],
+      "@reaatech/llm-router-engine": ["./packages/engine/src/index.ts"],
+      "@reaatech/llm-router-cli": ["./packages/cli/src/index.ts"]
+    }
+  }
+}

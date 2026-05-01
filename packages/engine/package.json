@@ -1,0 +1,58 @@
+{
+  "name": "@reaatech/llm-router-engine",
+  "version": "1.0.0",
+  "description": "Main LLM routing engine with model registry, eval hooks, and observability",
+  "license": "MIT",
+  "author": "Rick Somers <rick@reaatech.com> (https://reaatech.com)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/reaatech/llm-router.git",
+    "directory": "packages/engine"
+  },
+  "homepage": "https://github.com/reaatech/llm-router/tree/main/packages/engine#readme",
+  "bugs": {
+    "url": "https://github.com/reaatech/llm-router/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean && tsup src/health-check.ts --format cjs --no-dts",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/exporter-metrics-otlp-grpc": "^0.215.0",
+    "@opentelemetry/exporter-trace-otlp-grpc": "^0.215.0",
+    "@opentelemetry/instrumentation-http": "^0.215.0",
+    "@opentelemetry/sdk-metrics": "^2.7.0",
+    "@opentelemetry/sdk-node": "^0.215.0",
+    "@reaatech/llm-router-core": "workspace:*",
+    "@reaatech/llm-router-fallback": "workspace:*",
+    "@reaatech/llm-router-strategies": "workspace:*",
+    "@reaatech/llm-router-telemetry": "workspace:*",
+    "pino": "^9.6.0",
+    "yaml": "^2.4.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.1"
+  }
+}
