@@ -5,7 +5,7 @@
   "description": "Intelligent LLM routing based on cost, latency, and quality",
   "type": "module",
   "scripts": {
-    "build": "turbo run build",
+    "build": "pnpm install && turbo run build",
     "test": "turbo run test",
     "test:coverage": "turbo run test:coverage",
     "lint": "biome check .",
