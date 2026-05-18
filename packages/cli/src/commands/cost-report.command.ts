@@ -2,8 +2,7 @@
  * Cost report command.
  */
 
-import { LLMRouter } from '@reaatech/llm-router-engine';
-import { loadRouterConfig } from '@reaatech/llm-router-engine';
+import { LLMRouter, loadRouterConfig } from '@reaatech/llm-router-engine';
 import { writeError, writeLine } from '../output.js';
 
 interface CostReportOptions {

@@ -8,8 +8,8 @@ import type {
   RoutingContext,
   RoutingRequest,
 } from '@reaatech/llm-router-core';
-import { BaseRoutingStrategy } from './strategy.interface.js';
 import type { StrategySelectionResult } from './strategy.interface.js';
+import { BaseRoutingStrategy } from './strategy.interface.js';
 
 /** Configuration for capability-based strategy */
 export interface CapabilityBasedConfig {

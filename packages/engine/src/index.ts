@@ -6,116 +6,104 @@
 
 // Types
 export * from '@reaatech/llm-router-core';
-
-// Registry
-export * from './registry/index.js';
-
-// Router core
-export { LLMRouter, createRouter } from './router.js';
-export type { RouterOptions, RouterRouteSummary } from './router.js';
-
+// Fallback
+export * from '@reaatech/llm-router-fallback';
+export type {
+  CapabilityBasedConfig,
+  ComplexityIndicators,
+  CostOptimizedConfig,
+  JudgmentBasedConfig,
+  LatencyOptimizedConfig,
+  OrchestratorConfig,
+  StrategyEvaluationResult,
+  StrategySelectionResult,
+} from '@reaatech/llm-router-strategies';
 // Strategies (explicit exports to avoid duplicate RoutingStrategy)
 export {
   BaseRoutingStrategy,
-  CostOptimizedStrategy,
-  LatencyOptimizedStrategy,
-  JudgmentBasedStrategy,
   CapabilityBasedStrategy,
+  CostOptimizedStrategy,
+  JudgmentBasedStrategy,
+  LatencyOptimizedStrategy,
   StrategyOrchestrator,
 } from '@reaatech/llm-router-strategies';
-export type {
-  StrategySelectionResult,
-  CostOptimizedConfig,
-  LatencyOptimizedConfig,
-  JudgmentBasedConfig,
-  CapabilityBasedConfig,
-  ComplexityIndicators,
-  StrategyEvaluationResult,
-  OrchestratorConfig,
-} from '@reaatech/llm-router-strategies';
-
-// Fallback
-export * from '@reaatech/llm-router-fallback';
-
 // Telemetry
 export * from '@reaatech/llm-router-telemetry';
-
-// Observability (exclude QualityScore to avoid conflict with types)
-export {
-  createLogger,
-  childLogger,
-  redactSensitiveFields,
-  redactPIIPatterns,
-  containsPII,
-  logger,
-  type LoggerConfig,
-  type LogContext,
-} from './observability/logger.js';
-
-export {
-  setupTracing,
-  startRoutingSpan,
-  recordStrategyEvaluation,
-  recordModelExecution,
-  recordFallbackAttempt,
-  recordCostCalculation,
-  endSpan,
-  getTraceId,
-  getSpanId,
-  type TracingConfig,
-  type RoutingSpanAttributes,
-  type StrategyEvalAttributes,
-} from './observability/tracing.js';
-
 export {
   MetricsCollector,
-  metricsCollector,
   type MetricsConfig,
+  metricsCollector,
 } from '@reaatech/llm-router-telemetry';
 export {
-  ObservabilityDashboard,
-  type DashboardSnapshot,
-  type RoutingStats,
-  type CostTrend,
-  type CostTrendEntry,
-  type ModelHealthStatus,
-  type TrendWindowConfig,
-} from './observability/dashboard.js';
-
-// Eval (exclude QualityScore to avoid conflict with types)
-export {
-  QualityScorer,
-  qualityScorer,
-  humanFeedbackStore,
-  createRuleBasedScorer,
-  createQualityScorerWithFeedback,
-  HumanFeedbackStore,
-  type ScoringCriteria,
-  type ScorerFunction,
-  type HumanFeedback,
-} from './eval/quality-scorer.js';
-
-export {
-  ABTestManager,
-  abTestManager,
   type ABTestConfig,
+  ABTestManager,
   type ABTestStats,
+  abTestManager,
 } from './eval/ab-testing.js';
-
-export {
-  PerformanceTracker,
-  performanceTracker,
-  type ModelPerformance,
-} from './eval/performance-tracker.js';
-
 export {
   EvalHooksManager,
   evalHooksManager,
   type HookContext,
-  type PreRoutingHook,
-  type PostRoutingHook,
   type PostExecutionHook,
+  type PostRoutingHook,
+  type PreRoutingHook,
 } from './eval/eval-hooks.js';
+export {
+  type ModelPerformance,
+  PerformanceTracker,
+  performanceTracker,
+} from './eval/performance-tracker.js';
+// Eval (exclude QualityScore to avoid conflict with types)
+export {
+  createQualityScorerWithFeedback,
+  createRuleBasedScorer,
+  type HumanFeedback,
+  HumanFeedbackStore,
+  humanFeedbackStore,
+  QualityScorer,
+  qualityScorer,
+  type ScorerFunction,
+  type ScoringCriteria,
+} from './eval/quality-scorer.js';
+export {
+  type CostTrend,
+  type CostTrendEntry,
+  type DashboardSnapshot,
+  type ModelHealthStatus,
+  ObservabilityDashboard,
+  type RoutingStats,
+  type TrendWindowConfig,
+} from './observability/dashboard.js';
+// Observability (exclude QualityScore to avoid conflict with types)
+export {
+  childLogger,
+  containsPII,
+  createLogger,
+  type LogContext,
+  type LoggerConfig,
+  logger,
+  redactPIIPatterns,
+  redactSensitiveFields,
+} from './observability/logger.js';
+export {
+  endSpan,
+  getSpanId,
+  getTraceId,
+  type RoutingSpanAttributes,
+  recordCostCalculation,
+  recordFallbackAttempt,
+  recordModelExecution,
+  recordStrategyEvaluation,
+  type StrategyEvalAttributes,
+  setupTracing,
+  startRoutingSpan,
+  type TracingConfig,
+} from './observability/tracing.js';
+// Registry
+export * from './registry/index.js';
+export type { RouterOptions, RouterRouteSummary } from './router.js';
+// Router core
+export { createRouter, LLMRouter } from './router.js';
 
 // Utilities
 export * from './utils/index.js';

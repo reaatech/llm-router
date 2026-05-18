@@ -2,20 +2,18 @@
  * Registry barrel export
  */
 
-export { ModelRegistry } from './model-registry.js';
 export type { ModelFilterOptions } from './model-registry.js';
-export { ModelValidationError, NoMatchingModelError } from './model-registry.js';
-
-export {
-  ProviderClientFactory,
-  getProviderFactory,
-  isProviderConfigured,
-  getConfiguredProviders,
-} from './provider-clients.js';
+export { ModelRegistry, ModelValidationError, NoMatchingModelError } from './model-registry.js';
 export type {
-  ProviderType,
-  LLMClient,
   CompletionOptions,
   CompletionResult,
+  LLMClient,
   ProviderConfig,
+  ProviderType,
+} from './provider-clients.js';
+export {
+  getConfiguredProviders,
+  getProviderFactory,
+  isProviderConfigured,
+  ProviderClientFactory,
 } from './provider-clients.js';

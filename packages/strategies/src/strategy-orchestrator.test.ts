@@ -1,8 +1,10 @@
 import type { ModelDefinition, RoutingContext } from '@reaatech/llm-router-core';
-import { StrategyOrchestrator } from '@reaatech/llm-router-strategies';
-import { CostOptimizedStrategy } from '@reaatech/llm-router-strategies';
-import { CapabilityBasedStrategy } from '@reaatech/llm-router-strategies';
-import { JudgmentBasedStrategy } from '@reaatech/llm-router-strategies';
+import {
+  CapabilityBasedStrategy,
+  CostOptimizedStrategy,
+  JudgmentBasedStrategy,
+  StrategyOrchestrator,
+} from '@reaatech/llm-router-strategies';
 import { describe, expect, it } from 'vitest';
 
 const models: ModelDefinition[] = [
