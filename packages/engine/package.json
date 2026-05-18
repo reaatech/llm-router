@@ -36,18 +36,18 @@
   },
   "dependencies": {
     "@opentelemetry/api": "^1.9.0",
-    "@opentelemetry/exporter-metrics-otlp-grpc": "^0.217.0",
-    "@opentelemetry/exporter-trace-otlp-grpc": "^0.217.0",
-    "@opentelemetry/instrumentation-http": "^0.217.0",
+    "@opentelemetry/exporter-metrics-otlp-grpc": "^0.218.0",
+    "@opentelemetry/exporter-trace-otlp-grpc": "^0.218.0",
+    "@opentelemetry/instrumentation-http": "^0.218.0",
     "@opentelemetry/sdk-metrics": "^2.7.0",
-    "@opentelemetry/sdk-node": "^0.217.0",
+    "@opentelemetry/sdk-node": "^0.218.0",
     "@reaatech/llm-router-core": "workspace:*",
     "@reaatech/llm-router-fallback": "workspace:*",
     "@reaatech/llm-router-strategies": "workspace:*",
     "@reaatech/llm-router-telemetry": "workspace:*",
     "pino": "^10.3.1",
-    "yaml": "^2.8.4",
-    "zod": "^4.4.2"
+    "yaml": "^2.9.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^25.8.0",
