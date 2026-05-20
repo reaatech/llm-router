@@ -25,8 +25,7 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "verbatimModuleSyntax": true,
-    "types": ["node"]
+    "verbatimModuleSyntax": true
   },
   "exclude": ["node_modules", "dist", "*.config.js"]
 }
