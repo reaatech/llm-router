@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { MCPServer } from './mcp-server.js';
 import type { RouterInterface } from './mcp-server.js';
+import { MCPServer } from './mcp-server.js';
 import { handleGetCostReportTool } from './tools/get-cost-report.tool.js';
 import { handleGetModelInfoTool } from './tools/get-model-info.tool.js';
 import { handleRouteRequestTool } from './tools/route-request.tool.js';

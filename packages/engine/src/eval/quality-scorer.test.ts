@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
-  HumanFeedbackStore,
-  QualityScorer,
   createQualityScorerWithFeedback,
   createRuleBasedScorer,
+  HumanFeedbackStore,
+  QualityScorer,
 } from './quality-scorer.js';
 
 describe('QualityScorer', () => {

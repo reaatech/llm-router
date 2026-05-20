@@ -1,5 +1,4 @@
-import { StrategyOrchestrator } from '@reaatech/llm-router-strategies';
-import { CostOptimizedStrategy } from '@reaatech/llm-router-strategies';
+import { CostOptimizedStrategy, StrategyOrchestrator } from '@reaatech/llm-router-strategies';
 import { describe, expect, it } from 'vitest';
 import { ModelRegistry } from './registry/model-registry.js';
 import { createRouter } from './router.js';

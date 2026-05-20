@@ -3,43 +3,40 @@
  */
 
 export {
-  createLogger,
-  childLogger,
-  redactSensitiveFields,
-  redactPIIPatterns,
-  containsPII,
-  logger,
-  type LoggerConfig,
-  type LogContext,
-} from './logger.js';
-
-export {
-  setupTracing,
-  startRoutingSpan,
-  recordStrategyEvaluation,
-  recordModelExecution,
-  recordFallbackAttempt,
-  recordCostCalculation,
-  endSpan,
-  getTraceId,
-  getSpanId,
-  type TracingConfig,
-  type RoutingSpanAttributes,
-  type StrategyEvalAttributes,
-} from './tracing.js';
-
-export {
   MetricsCollector,
-  metricsCollector,
   type MetricsConfig,
+  metricsCollector,
 } from '@reaatech/llm-router-telemetry';
-
 export {
-  ObservabilityDashboard,
-  type DashboardSnapshot,
-  type RoutingStats,
   type CostTrend,
   type CostTrendEntry,
+  type DashboardSnapshot,
   type ModelHealthStatus,
+  ObservabilityDashboard,
+  type RoutingStats,
   type TrendWindowConfig,
 } from './dashboard.js';
+export {
+  childLogger,
+  containsPII,
+  createLogger,
+  type LogContext,
+  type LoggerConfig,
+  logger,
+  redactPIIPatterns,
+  redactSensitiveFields,
+} from './logger.js';
+export {
+  endSpan,
+  getSpanId,
+  getTraceId,
+  type RoutingSpanAttributes,
+  recordCostCalculation,
+  recordFallbackAttempt,
+  recordModelExecution,
+  recordStrategyEvaluation,
+  type StrategyEvalAttributes,
+  setupTracing,
+  startRoutingSpan,
+  type TracingConfig,
+} from './tracing.js';

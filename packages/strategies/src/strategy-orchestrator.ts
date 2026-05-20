@@ -2,8 +2,12 @@
  * Strategy Orchestrator - Coordinates multiple routing strategies
  */
 
-import type { ModelDefinition, RoutingContext, RoutingRequest } from '@reaatech/llm-router-core';
-import type { StrategyConfigInput } from '@reaatech/llm-router-core';
+import type {
+  ModelDefinition,
+  RoutingContext,
+  RoutingRequest,
+  StrategyConfigInput,
+} from '@reaatech/llm-router-core';
 import { CapabilityBasedStrategy } from './capability-based.strategy.js';
 import { CostOptimizedStrategy } from './cost-optimized.strategy.js';
 import { JudgmentBasedStrategy } from './judgment-based.strategy.js';

@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+  generateIdempotencyKey,
   IdempotencyStore,
+  isRetryableStatusCode,
   RetryExhaustedError,
   RetryLogic,
-  generateIdempotencyKey,
-  isRetryableStatusCode,
 } from './retry-logic.js';
 
 describe('RetryLogic', () => {

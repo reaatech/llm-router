@@ -1,6 +1,5 @@
 import type { ModelDefinition, RoutingContext } from '@reaatech/llm-router-core';
-import { JudgmentBasedStrategy } from '@reaatech/llm-router-strategies';
-import { LatencyOptimizedStrategy } from '@reaatech/llm-router-strategies';
+import { JudgmentBasedStrategy, LatencyOptimizedStrategy } from '@reaatech/llm-router-strategies';
 import { describe, expect, it } from 'vitest';
 
 const context: RoutingContext = {

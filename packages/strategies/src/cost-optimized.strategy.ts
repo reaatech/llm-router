@@ -3,8 +3,8 @@
  */
 
 import type { ModelDefinition, RoutingContext, RoutingRequest } from '@reaatech/llm-router-core';
-import { BaseRoutingStrategy } from './strategy.interface.js';
 import type { StrategySelectionResult } from './strategy.interface.js';
+import { BaseRoutingStrategy } from './strategy.interface.js';
 
 /** Configuration for cost-optimized strategy */
 export interface CostOptimizedConfig {

@@ -3,8 +3,8 @@
  */
 
 export {
-  MCPServer,
   createMCPServer,
+  MCPServer,
   type MCPServerConfig,
   type RouterInterface,
 } from './mcp-server.js';
