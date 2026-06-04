@@ -1,6 +1,6 @@
 {
   "name": "@reaatech/llm-router-engine",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Main LLM routing engine with model registry, eval hooks, and observability",
   "license": "MIT",
   "author": "Rick Somers <rick@reaatech.com> (https://reaatech.com)",
