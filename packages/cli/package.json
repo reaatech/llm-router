@@ -1,6 +1,6 @@
 {
   "name": "@reaatech/llm-router-cli",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CLI tool for llm-router",
   "license": "MIT",
   "author": "Rick Somers <rick@reaatech.com> (https://reaatech.com)",
