@@ -54,12 +54,12 @@
   },
   "homepage": "https://github.com/reaatech/llm-router#readme",
   "devDependencies": {
-    "@biomejs/biome": "^2.4.15",
+    "@biomejs/biome": "^2.4.16",
     "@changesets/changelog-github": "^0.7.0",
     "@changesets/cli": "^2.28.1",
-    "@vitest/coverage-v8": "4.1.6",
-    "turbo": "^2.9.14",
+    "@vitest/coverage-v8": "4.1.8",
+    "turbo": "^2.9.16",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.6"
+    "vitest": "^4.1.8"
   }
 }
