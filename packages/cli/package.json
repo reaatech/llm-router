@@ -39,7 +39,7 @@
   "dependencies": {
     "@reaatech/llm-router-core": "workspace:*",
     "@reaatech/llm-router-engine": "workspace:*",
-    "commander": "^14.0.3"
+    "commander": "^15.0.0"
   },
   "devDependencies": {
     "@types/node": "^25.8.0",
